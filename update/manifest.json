@@ -1,10 +1,10 @@
 {
   "ui": {
-    "version": "2.0.2",
-    "url": "ui-2.0.2.json",
-    "sha256": "1d7249b51115549bbc958dff0b3116cd9c05e81be46a7f016154e1191633eaa9",
+    "version": "2.0.3",
+    "url": "ui-2.0.3.json",
+    "sha256": "6017773fad9ca2411e65e29222d32032a0f1739c4b1ffe11a65000fd102858af",
     "minShell": 2,
-    "notes": "Smart home: Top 10 today, popular on Netflix, Prime Video, Apple TV+ and more; pick any subtitle file"
+    "notes": "Smoother live TV start"
   },
   "shell": {
     "version": "2.0.0",

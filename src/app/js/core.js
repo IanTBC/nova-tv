@@ -398,7 +398,7 @@ class Engine {
     this.watch();
     const v = this.v;
     if (s.type === 'hls' && window.Hls?.isSupported()) {
-      const hls = (this.hls = new Hls({ enableWorker: true, backBufferLength: 60, maxBufferLength: 30, startFragPrefetch: true, manifestLoadingTimeOut: 15000, fragLoadingTimeOut: 25000, capLevelToPlayerSize: false }));
+      const hls = (this.hls = new Hls({ enableWorker: true, liveSyncDurationCount: 4, liveMaxLatencyDurationCount: 12, maxLiveSyncPlaybackRate: 1, backBufferLength: 60, maxBufferLength: 30, startFragPrefetch: true, manifestLoadingTimeOut: 15000, fragLoadingTimeOut: 25000, capLevelToPlayerSize: false }));
       hls.on(Hls.Events.MANIFEST_PARSED, () => { if (t === this.token) { v.play().catch(() => {}); this.onState('tracks'); } });
       hls.on(Hls.Events.AUDIO_TRACKS_UPDATED, () => this.onState('tracks'));
       hls.on(Hls.Events.LEVEL_SWITCHED, () => this.onState('level'));
@@ -415,7 +415,7 @@ class Engine {
     } else if (s.type === 'mpegts' && window.mpegts?.isSupported()) {
       const p = (this.ts = mpegts.createPlayer(
         { type: 'mpegts', isLive: !!s.live, url: s.url },
-        { enableWorker: true, lazyLoad: !s.live, liveBufferLatencyChasing: !!s.live, liveBufferLatencyMaxLatency: 8, liveBufferLatencyMinRemain: 2, autoCleanupSourceBuffer: true, stashInitialSize: 384 * 1024 }
+        { enableWorker: true, enableStashBuffer: true, stashInitialSize: 1024 * 1024, lazyLoad: !s.live, liveBufferLatencyChasing: false, liveSync: false, autoCleanupSourceBuffer: true, autoCleanupMaxBackwardDuration: 60, autoCleanupMinBackwardDuration: 30, fixAudioTimestampGap: false }
       ));
       p.on(mpegts.Events.ERROR, () => { if (t === this.token) this.next(); });
       p.on(mpegts.Events.MEDIA_INFO, () => this.onState('tracks'));
