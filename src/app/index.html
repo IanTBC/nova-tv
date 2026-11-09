@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Nova TV</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="ambient" aria-hidden="true"><i></i><i></i></div>
+
+  <!-- ============ LOGIN ============ -->
+  <section id="login" class="login hidden">
+    <div class="login-card">
+      <div class="brand big"><span class="nova-logo"></span>Nova<span class="sub">TV</span></div>
+      <p class="login-sub">Connect your IPTV subscription</p>
+      <div id="savedProfiles" class="saved-profiles"></div>
+      <div class="seg" role="tablist">
+        <button class="seg-btn active" data-mode="xtream">Username &amp; Password</button>
+        <button class="seg-btn" data-mode="m3u">M3U Link</button>
+      </div>
+      <form id="loginForm" autocomplete="off">
+        <label class="field"><span>Playlist name</span><input name="name" placeholder="My IPTV" /></label>
+        <div class="mode-xtream">
+          <label class="field"><span>Server URL</span><input name="server" placeholder="http://line.example.com:8080" /></label>
+          <div class="row2">
+            <label class="field"><span>Username</span><input name="username" /></label>
+            <label class="field"><span>Password</span><input name="password" type="password" /></label>
+          </div>
+        </div>
+        <div class="mode-m3u hidden">
+          <label class="field"><span>M3U URL</span><input name="m3u" placeholder="http://…/get.php?username=…&password=…&type=m3u_plus" /></label>
+          <p class="hint">Paste the full link from your provider. If it contains <b>username=…&amp;password=…</b>, Nova logs in with those details automatically to unlock the full Movies &amp; TV Shows sections.</p>
+        </div>
+        <div id="loginError" class="form-error hidden"></div>
+        <button class="btn accent wide" type="submit" id="loginBtn"><span>Connect</span></button>
+      </form>
+      <p class="fine">Your login is stored only on this Mac.</p>
+    </div>
+  </section>
+
+  <!-- ============ WHO'S WATCHING ============ -->
+  <section id="who" class="who hidden"></section>
+
+  <!-- ============ SHELL ============ -->
+  <div id="shell" class="shell hidden">
+    <header class="topnav" id="topnav">
+      <button class="brand" data-act="go" data-view="home" aria-label="Nova TV home"><span class="nova-logo"></span>Nova<span class="sub">TV</span></button>
+      <nav class="tabs" aria-label="Main">
+        <button class="tab" data-view="home">Home</button>
+        <button class="tab" data-view="live">Live TV</button>
+        <button class="tab" data-view="movies">Movies</button>
+        <button class="tab" data-view="series">TV Shows</button>
+        <button class="tab" data-view="mylist">My List</button>
+      </nav>
+      <div class="top-right">
+        <label class="search" id="searchBox"><i data-icon="search"></i><input id="globalSearch" placeholder="Titles, channels, shows" aria-label="Search" /></label>
+        <div class="clock" id="clock"></div>
+        <div class="menu-wrap" style="position:relative">
+          <button class="avatar" id="avatarBtn" aria-label="Profile menu"></button>
+          <div class="menu-pop hidden" id="avatarMenu"></div>
+        </div>
+      </div>
+    </header>
+    <main id="view" class="view"></main>
+  </div>
+
+  <!-- ============ PLAYER ============ -->
+  <div id="player" class="player hidden">
+    <video id="video" playsinline></video>
+    <div class="p-subs" id="pSubs"><span id="pSubsText"></span></div>
+    <div class="p-loading hidden" id="pLoading"><div class="spinner"></div><span id="pLoadingText">Tuning in…</span></div>
+    <div class="p-error hidden" id="pError">
+      <div class="p-error-card glass">
+        <h3>Can't play this stream</h3>
+        <p id="pErrorMsg">The stream format isn't supported or the server didn't respond.</p>
+        <div class="p-error-actions">
+          <button class="btn ghost" data-act="p-retry">Retry</button>
+          <button class="btn accent" data-act="p-external">Open in VLC / IINA</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="p-chrome" id="pChrome">
+      <div class="p-top">
+        <button class="icon-btn" data-act="p-close" title="Back (Esc)"><i data-icon="back"></i></button>
+        <div class="p-titles">
+          <div class="p-title" id="pTitle"></div>
+          <div class="p-sub" id="pSub"></div>
+        </div>
+        <div class="p-badges" id="pBadges"></div>
+      </div>
+      <div class="p-epg hidden" id="pEpg"></div>
+      <div class="p-bottom">
+        <div class="p-progress" id="pProgress">
+          <div class="p-buffer" id="pBuffer"></div>
+          <div class="p-fill" id="pFill"></div>
+          <div class="p-knob" id="pKnob"></div>
+          <div class="p-hover-time hidden" id="pHoverTime"></div>
+        </div>
+        <div class="p-controls">
+          <div class="p-left">
+            <button class="icon-btn" data-act="p-prev" id="pPrev" title="Previous (↑)"><i data-icon="skip-back"></i></button>
+            <button class="icon-btn" data-act="p-back10" id="pBack10" title="Back 10s (←)"><i data-icon="rewind"></i></button>
+            <button class="icon-btn big" data-act="p-toggle" title="Play/Pause (Space)"><i data-icon="pause" id="pToggleIcon"></i></button>
+            <button class="icon-btn" data-act="p-fwd10" id="pFwd10" title="Forward 10s (→)"><i data-icon="forward"></i></button>
+            <button class="icon-btn" data-act="p-next" id="pNext" title="Next (↓)"><i data-icon="skip-fwd"></i></button>
+            <div class="p-time" id="pTime"></div>
+          </div>
+          <div class="p-right">
+            <button class="p-next hidden" data-act="p-next-ep" id="pNextEp">Next episode <i data-icon="skip-fwd"></i></button>
+            <div class="vol">
+              <button class="icon-btn" data-act="p-mute" title="Mute (M)"><i data-icon="volume" id="pVolIcon"></i></button>
+              <input type="range" id="pVol" min="0" max="1" step="0.02" value="1" aria-label="Volume" />
+            </div>
+            <button class="icon-btn" data-act="p-channels" id="pChannelsBtn" title="Channel list (L)"><i data-icon="list"></i></button>
+            <button class="icon-btn accentbg" data-act="p-panel" id="pPanelBtn" title="Subtitles &amp; quality (S)"><i data-icon="cc"></i></button>
+            <button class="icon-btn" data-act="p-mini" title="Mini player — keep watching while you browse (P)"><i data-icon="mini"></i></button>
+            <button class="icon-btn" data-act="p-fullscreen" title="Fullscreen (F)"><i data-icon="expand"></i></button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="p-panel hidden" id="pPanel"></div>
+    <aside class="p-drawer glass hidden" id="pDrawer">
+      <div class="p-drawer-head"><span id="pDrawerTitle">Channels</span><button class="icon-btn" data-act="p-channels"><i data-icon="x"></i></button></div>
+      <div class="p-drawer-list" id="pDrawerList"></div>
+    </aside>
+    <div class="p-osd hidden" id="pOsd"></div>
+  </div>
+
+  <div id="toasts" class="toasts"></div>
+
+  <script src="vendor/hls.min.js"></script>
+  <script src="vendor/mpegts.js"></script>
+  <script src="js/core.js"></script>
+  <script src="js/meta.js"></script>
+  <script src="js/state.js"></script>
+  <script src="js/player.js"></script>
+  <script src="js/views.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

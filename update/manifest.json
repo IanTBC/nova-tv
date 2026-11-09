@@ -1,0 +1,31 @@
+{
+  "ui": {
+    "version": "2.0.0",
+    "url": "",
+    "sha256": "",
+    "minShell": 2,
+    "notes": ""
+  },
+  "shell": {
+    "version": "2.0.0",
+    "notes": "",
+    "builds": {
+      "arm64": {
+        "parts": [
+          "https://raw.githubusercontent.com/IanTBC/nova-tv/main/releases/mac-arm64/part-00",
+          "https://raw.githubusercontent.com/IanTBC/nova-tv/main/releases/mac-arm64/part-01",
+          "https://raw.githubusercontent.com/IanTBC/nova-tv/main/releases/mac-arm64/part-02"
+        ],
+        "sha256": "8cba9c8ab446a15f40a999785c9e0ad7f1408dff7a99927d5a285ae1ee2aa104"
+      },
+      "x64": {
+        "parts": [
+          "https://raw.githubusercontent.com/IanTBC/nova-tv/main/releases/mac-x64/part-00",
+          "https://raw.githubusercontent.com/IanTBC/nova-tv/main/releases/mac-x64/part-01",
+          "https://raw.githubusercontent.com/IanTBC/nova-tv/main/releases/mac-x64/part-02"
+        ],
+        "sha256": "8d4d3f5e5e0c0a188985a998f05a5cf642e370410f0b3ed37c19f74b486f748b"
+      }
+    }
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "name": "nova-tv",
+  "productName": "Nova TV",
+  "version": "1.0.0",
+  "description": "Nova TV \u2014 IPTV player for macOS",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "pack:mac": "electron-packager . 'Nova TV' --platform=darwin --arch=arm64,x64 --icon=build/icon.icns --out=dist --overwrite --app-bundle-id=com.ianbrown.novatv --ignore='^/(dist|old-fonts|test|build/.*\\.png)'"
+  },
+  "author": "Ian Brown",
+  "license": "UNLICENSED",
+  "devDependencies": {
+    "@electron/packager": "^20.3.0",
+    "electron": "^45.2.3",
+    "@fontsource/jetbrains-mono": "^5.3.0",
+    "@fontsource/manrope": "^5.3.0",
+    "@fontsource/unbounded": "^5.3.0",
+    "hls.js": "^1.7.4",
+    "mpegts.js": "^1.8.2"
+  }
+}
