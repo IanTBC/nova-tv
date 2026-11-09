@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Nova TV — a cinematic IPTV player for Mac</title>
+<meta name="description" content="Nova TV turns your IPTV subscription into a cinematic Mac app: live TV guide with catch-up, movies, TV shows, subtitles, profiles and a floating mini player.">
+<link rel="icon" href="site/icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;600;700&family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+:root{--bg:#0A0D19;--surface:#131729;--surface-2:#1B2036;--ink:#EEF0FA;--muted:#9CA3BF;--line:rgba(238,240,250,.1);--accent:#FF7048;--accent-text:#FF8A66;--mint:#3FE0C5;--glass:rgba(16,20,36,.66);--btn-bg:#EEF0FA;--btn-fg:#0A0D19;--shadow:0 1px 2px rgba(0,0,0,.4),0 18px 40px -18px rgba(0,0,0,.7);--fd:"Unbounded",system-ui,sans-serif;--fb:"Manrope",system-ui,sans-serif;--fm:"JetBrains Mono",ui-monospace,monospace;--ease:cubic-bezier(.2,.8,.2,1);--spring:cubic-bezier(.34,1.4,.64,1)}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 var(--fb);-webkit-font-smoothing:antialiased;overflow-x:hidden}
+a{color:inherit;text-decoration:none}button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:8px}
+h1,h2,h3{font-family:var(--fd);margin:0;letter-spacing:-.03em;line-height:1.05;text-wrap:balance}p{margin:0}
+.wrap{max-width:1200px;margin:0 auto;padding:0 24px}
+.ambient{position:fixed;inset:0;z-index:-1;pointer-events:none;overflow:hidden}
+.ambient i{position:absolute;width:70vmax;height:70vmax;border-radius:50%}
+.ambient i:nth-child(1){background:radial-gradient(circle,rgba(255,110,70,.16),transparent 62%);top:-30vmax;right:-25vmax;animation:d1 22s ease-in-out infinite alternate}
+.ambient i:nth-child(2){background:radial-gradient(circle,rgba(70,110,255,.18),transparent 62%);bottom:-35vmax;left:-25vmax;animation:d2 26s ease-in-out infinite alternate}
+@keyframes d1{to{transform:translate3d(-12vmax,10vmax,0)}}@keyframes d2{to{transform:translate3d(14vmax,-8vmax,0)}}
+.eyebrow{font:500 12px var(--fm);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);display:inline-flex;align-items:center;gap:8px}
+.eyebrow .dot{width:8px;height:8px;border-radius:50%;background:var(--mint);box-shadow:0 0 0 4px rgba(63,224,197,.22);animation:pulse 2.4s ease-in-out infinite}@keyframes pulse{50%{transform:scale(.7)}}
+.top{position:sticky;top:0;z-index:20;background:var(--glass);backdrop-filter:saturate(1.6) blur(18px);-webkit-backdrop-filter:saturate(1.6) blur(18px);border-bottom:1px solid var(--line)}
+.top .wrap{display:flex;align-items:center;gap:20px;height:68px}
+.brand{display:flex;align-items:center;gap:12px;font:700 18px var(--fd);letter-spacing:-.02em;margin-right:auto}.brand span{font-weight:500;color:var(--muted);margin-left:-6px}
+.logo{width:24px;height:24px;border-radius:50%;position:relative;background:radial-gradient(circle at 35% 35%,#FFD2C2,var(--accent) 60%)}.logo::after{content:"";position:absolute;inset:-5px -9px;border:2px solid var(--ink);border-radius:50%;transform:rotate(-24deg) scaleY(.38);opacity:.85}
+.nav{display:flex;gap:4px}.nav a{padding:8px 14px;border-radius:999px;font-weight:600;font-size:14px;color:var(--muted)}.nav a:hover{color:var(--ink)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:52px;padding:0 26px;border-radius:999px;background:var(--btn-bg);color:var(--btn-fg);font-weight:700;transition:transform .3s var(--spring)}.btn:hover{transform:translateY(-2px)}.btn:active{transform:scale(.96)}
+.btn.accent{background:var(--accent);color:#121628;box-shadow:0 12px 30px -10px rgba(255,112,72,.6)}.btn.ghost{background:transparent;color:var(--ink);box-shadow:inset 0 0 0 1.5px var(--line)}.btn.sm{min-height:40px;padding:0 18px;font-size:14px}
+svg.i{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.hero{padding:72px 0 40px;display:grid;gap:40px;grid-template-columns:1fr 1.15fr;align-items:center}
+.hero h1{font-size:clamp(40px,6vw,76px);font-weight:700;letter-spacing:-.045em;line-height:.98;margin:18px 0 18px}.hero h1 em{font-style:normal;color:var(--accent-text)}
+.lede{font-size:18px;color:var(--muted);max-width:46ch}.row{display:flex;gap:12px;flex-wrap:wrap;margin-top:28px}
+.facts{display:flex;gap:28px;margin-top:30px;flex-wrap:wrap}.facts div{font:500 11px var(--fm);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}.facts b{display:block;font:600 22px var(--fd);letter-spacing:-.03em;color:var(--ink);text-transform:none}
+.shot{position:relative;border-radius:22px;overflow:hidden;box-shadow:0 40px 100px -30px rgba(0,0,0,.8),0 0 0 1px var(--line);background:var(--surface)}
+.shot img{display:block;width:100%;height:auto}
+.shot.tilt{transform:perspective(1600px) rotateY(-8deg) rotateX(3deg);transition:transform .8s var(--ease)}.shot.tilt:hover{transform:none}
+.orbit{position:absolute;border-radius:50%;border:1.5px dashed rgba(238,240,250,.15);animation:spin 30s linear infinite;pointer-events:none}.orbit i{position:absolute;top:50%;left:-7px;width:14px;height:14px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 6px rgba(255,112,72,.22)}@keyframes spin{to{transform:rotate(360deg)}}
+.hero-stage{position:relative}.hero-stage .orbit{inset:-10% -6%;z-index:-1}
+section{padding:70px 0}.sec-head{max-width:640px;margin-bottom:34px}.sec-head h2{font-size:clamp(28px,3.6vw,44px);margin-top:12px}.sec-head p{color:var(--muted);margin-top:12px;font-size:17px}
+.grid{display:grid;gap:16px;grid-template-columns:repeat(3,minmax(0,1fr))}
+.card{background:var(--surface);border-radius:28px;padding:26px;box-shadow:var(--shadow);transition:transform .45s var(--ease)}.card:hover{transform:translateY(-4px)}
+.card .ico{width:52px;height:52px;border-radius:50%;display:grid;place-items:center;background:var(--surface-2);color:var(--accent);margin-bottom:18px;transition:background .25s,color .25s}.card:hover .ico{background:var(--accent);color:#121628}
+.card h3{font-size:17px;margin-bottom:8px}.card p{color:var(--muted);font-size:15px}
+.split{display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:center;margin-bottom:70px}.split.rev .txt{order:2}
+.split h3{font-size:clamp(24px,3vw,34px);margin:12px 0 14px}.split p{color:var(--muted);font-size:17px}.split ul{margin:18px 0 0;padding:0;list-style:none;display:grid;gap:10px}.split li{display:flex;gap:10px;align-items:flex-start;color:var(--ink);font-weight:600;font-size:15px}.split li svg{color:var(--mint);margin-top:3px}
+.band{border-radius:32px;background:var(--btn-bg);color:var(--btn-fg);padding:clamp(28px,5vw,56px);display:grid;grid-template-columns:1fr auto;gap:24px;align-items:center;position:relative;overflow:hidden}
+.band h2{font-size:clamp(26px,3.6vw,42px);max-width:18ch}.band p{color:#565E77;margin-top:10px;max-width:50ch}.band .btn{background:#0A0D19;color:#EEF0FA}
+.band::before{content:"";position:absolute;width:380px;height:380px;border-radius:50%;right:-120px;top:-170px;background:radial-gradient(circle,rgba(255,112,72,.5),transparent 65%)}
+.faq{display:grid;gap:10px;max-width:820px}details{background:var(--surface);border-radius:20px;padding:18px 22px;box-shadow:var(--shadow)}summary{cursor:pointer;font-weight:700;list-style:none;display:flex;justify-content:space-between;gap:16px}summary::after{content:"+";font:600 20px var(--fd);color:var(--muted);transition:transform .3s}details[open] summary::after{transform:rotate(45deg)}details p{color:var(--muted);margin-top:10px}
+footer{border-top:1px solid var(--line);padding:28px 0 40px;color:var(--muted);font-size:14px}footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+/* wizard */
+.wz{position:fixed;inset:0;z-index:50;display:grid;place-items:center;background:rgba(5,6,12,.7);backdrop-filter:blur(12px);padding:20px;opacity:0;pointer-events:none;transition:opacity .3s}
+.wz.open{opacity:1;pointer-events:auto}
+.wz-card{width:min(640px,100%);background:var(--surface);border-radius:30px;box-shadow:0 50px 120px -30px rgba(0,0,0,.8),0 0 0 1px var(--line);padding:30px;transform:translateY(20px) scale(.98);transition:transform .45s var(--ease);position:relative}
+.wz.open .wz-card{transform:none}
+.wz-x{position:absolute;right:18px;top:18px;width:40px;height:40px;border-radius:50%;background:var(--surface-2);display:grid;place-items:center}
+.steps{display:flex;gap:6px;margin:6px 0 24px}.steps i{flex:1;height:5px;border-radius:99px;background:var(--surface-2);overflow:hidden;position:relative}.steps i::after{content:"";position:absolute;inset:0;background:var(--accent);transform:scaleX(0);transform-origin:left;transition:transform .5s var(--ease)}.steps i.on::after{transform:scaleX(1)}
+.step{display:none;animation:in .45s var(--ease)}.step.on{display:block}@keyframes in{from{opacity:0;transform:translateX(16px)}}
+.step h3{font-size:24px;margin:10px 0 10px}.step p{color:var(--muted)}
+.keys{display:flex;gap:8px;align-items:center;margin:20px 0;flex-wrap:wrap;font-weight:700}.key{min-width:52px;height:52px;padding:0 14px;border-radius:14px;display:grid;place-items:center;background:var(--surface-2);box-shadow:inset 0 -3px 0 rgba(0,0,0,.35);font:600 15px var(--fm)}
+.cmd{display:flex;gap:10px;align-items:center;margin:20px 0 8px;background:#05060C;border-radius:16px;padding:10px 10px 10px 16px;box-shadow:inset 0 0 0 1px var(--line)}.cmd code{flex:1;font:500 13px var(--fm);color:#C9CFE6;overflow-x:auto;white-space:nowrap;padding:6px 0}
+.term{margin-top:18px;border-radius:16px;background:#05060C;box-shadow:inset 0 0 0 1px var(--line);padding:16px 18px;font:500 13px/1.8 var(--fm);color:#9CA3BF}.term b{color:var(--mint);font-weight:500}.term .bar{height:6px;border-radius:99px;background:#1B2036;margin:6px 0;overflow:hidden}.term .bar span{display:block;height:100%;width:0;background:var(--accent);animation:fill 3.2s var(--ease) infinite}@keyframes fill{to{width:100%}}
+.wz-nav{display:flex;justify-content:space-between;align-items:center;margin-top:24px;gap:12px}.wz-nav .count{font:500 12px var(--fm);color:var(--muted)}
+.done-ic{width:110px;height:110px;margin:6px auto 10px;display:block}.done-ic circle{fill:none;stroke:var(--mint);stroke-width:5;stroke-dasharray:340;stroke-dashoffset:340}.done-ic path{fill:none;stroke:var(--mint);stroke-width:6;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:80;stroke-dashoffset:80}.step.on .done-ic circle{animation:draw .8s var(--ease) forwards}.step.on .done-ic path{animation:draw .5s .55s var(--ease) forwards}@keyframes draw{to{stroke-dashoffset:0}}
+.toast{position:fixed;left:50%;bottom:28px;transform:translate(-50%,20px);opacity:0;background:var(--btn-bg);color:var(--btn-fg);padding:10px 20px;border-radius:999px;font-weight:700;font-size:14px;transition:all .35s var(--spring);z-index:60;pointer-events:none}.toast.show{opacity:1;transform:translate(-50%,0)}
+@media(max-width:900px){.hero,.split{grid-template-columns:1fr}.split.rev .txt{order:0}.grid{grid-template-columns:1fr 1fr}.nav{display:none}.band{grid-template-columns:1fr}.shot.tilt{transform:none}}
+@media(max-width:600px){.grid{grid-template-columns:1fr}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.001ms!important;transition-duration:.001ms!important}}
+</style>
+</head>
+<body>
+<div class="ambient" aria-hidden="true"><i></i><i></i></div>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+<symbol id="i-dl" viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5"/><path d="M4 21h16"/></symbol>
+<symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5 10 17 19 7"/></symbol>
+<symbol id="i-copy" viewBox="0 0 24 24"><rect x="8" y="8" width="13" height="13" rx="3"/><path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3"/></symbol>
+<symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></symbol>
+<symbol id="i-tv" viewBox="0 0 24 24"><rect x="2.5" y="6" width="19" height="13" rx="2.5"/><path d="m8 2.5 4 3.5 4-3.5"/></symbol>
+<symbol id="i-film" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2.5"/><path d="M7 3v18M17 3v18M3 8h4M3 16h4M17 8h4M17 16h4M3 12h18"/></symbol>
+<symbol id="i-cc" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M7 15h4M13 15h4M7 11h10"/></symbol>
+<symbol id="i-star" viewBox="0 0 24 24"><path d="m12 2.5 2.9 6 6.6.9-4.8 4.6 1.2 6.5L12 17.4 6.1 20.5l1.2-6.5L2.5 9.4l6.6-.9z"/></symbol>
+<symbol id="i-mini" viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2.5"/><rect x="12" y="11" width="7" height="6" rx="1.2"/></symbol>
+<symbol id="i-users" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><circle cx="17" cy="9" r="2.5"/><path d="M16 14.5a5 5 0 0 1 5.5 5"/></symbol>
+<symbol id="i-q" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M7 9v6M7 12h3M10 9v6M14 9h2.5a1.5 1.5 0 0 1 1.5 1.5v3a1.5 1.5 0 0 1-1.5 1.5H14z"/></symbol>
+<symbol id="i-refresh" viewBox="0 0 24 24"><path d="M21 12a9 9 0 0 1-15.4 6.4L3 16"/><path d="M3 12a9 9 0 0 1 15.4-6.4L21 8"/><path d="M21 3v5h-5M3 21v-5h5"/></symbol>
+<symbol id="i-lock" viewBox="0 0 24 24"><rect x="4" y="10" width="16" height="11" rx="3"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></symbol>
+</defs></svg>
+
+<header class="top"><div class="wrap">
+  <a class="brand" href="#"><span class="logo" aria-hidden="true"></span>Nova <span>TV</span></a>
+  <nav class="nav" aria-label="Main"><a href="#features">Features</a><a href="#tour">Tour</a><a href="#faq">FAQ</a></nav>
+  <button class="btn sm accent" data-open-wizard><svg class="i"><use href="#i-dl"/></svg>Download</button>
+</div></header>
+
+<main>
+<div class="wrap">
+  <section class="hero">
+    <div>
+      <span class="eyebrow"><span class="dot"></span>Free for Mac · Version 2.0</span>
+      <h1>Your IPTV,<br>made <em>cinematic</em>.</h1>
+      <p class="lede">Nova TV turns your IPTV subscription into a beautiful Mac app — a real TV guide with catch-up, movie and show pages with IMDb ratings, subtitles in dozens of languages and a floating mini player.</p>
+      <div class="row">
+        <button class="btn accent" data-open-wizard><svg class="i"><use href="#i-dl"/></svg>Download for Mac</button>
+        <a class="btn ghost" href="#tour">Take the tour</a>
+      </div>
+      <div class="facts"><div><b>Live · Movies · Shows</b>All in one place</div><div><b>120 Hz</b>Ultra smooth</div><div><b>0 sign-ups</b>Just your IPTV login</div></div>
+    </div>
+    <div class="hero-stage"><div class="orbit" aria-hidden="true"><i></i></div><div class="shot tilt"><img src="site/home.jpg" alt="Nova TV home screen with a featured title and rows of channels and movies"></div></div>
+  </section>
+</div>
+
+<section id="features"><div class="wrap">
+  <div class="sec-head"><span class="eyebrow">Features</span><h2>Everything a great TV app should do.</h2><p>Built around the way you actually watch: jump into live TV, pick up a show where you left off, or keep a match playing in the corner while you browse.</p></div>
+  <div class="grid">
+    <div class="card"><div class="ico"><svg class="i"><use href="#i-tv"/></svg></div><h3>Live TV guide & catch-up</h3><p>A full TV guide with what's on now and next. Start a programme from the beginning, or replay one that already aired on catch-up channels.</p></div>
+    <div class="card"><div class="ico"><svg class="i"><use href="#i-film"/></svg></div><h3>Movies & TV shows</h3><p>Big banners, rows by category and full show pages with seasons, episodes and "continue watching".</p></div>
+    <div class="card"><div class="ico"><svg class="i"><use href="#i-star"/></svg></div><h3>Better posters & IMDb ratings</h3><p>Every title is matched on IMDb for sharp posters, backdrops, ratings, cast and trailers — automatically.</p></div>
+    <div class="card"><div class="ico"><svg class="i"><use href="#i-cc"/></svg></div><h3>Subtitles, built in</h3><p>Subtitles in dozens of languages, found automatically. Make them bigger, fix the timing, or try another version in one click.</p></div>
+    <div class="card"><div class="ico"><svg class="i"><use href="#i-q"/></svg></div><h3>Pick your quality</h3><p>Switch between SD, HD, Full HD and 4K versions of a channel, or let it choose the best quality automatically.</p></div>
+    <div class="card"><div class="ico"><svg class="i"><use href="#i-mini"/></svg></div><h3>Floating mini player</h3><p>One button pops the video into a small window that floats over everything — even full-screen apps.</p></div>
+    <div class="card"><div class="ico"><svg class="i"><use href="#i-users"/></svg></div><h3>Profiles for everyone</h3><p>Each person gets their own My List, favourite channels and Continue watching.</p></div>
+    <div class="card"><div class="ico"><svg class="i"><use href="#i-refresh"/></svg></div><h3>Updates itself</h3><p>New features arrive automatically in the background. Install once, never think about it again.</p></div>
+    <div class="card"><div class="ico"><svg class="i"><use href="#i-lock"/></svg></div><h3>Private by design</h3><p>Your IPTV login stays on your Mac. No accounts, no tracking, no sign-ups.</p></div>
+  </div>
+</div></section>
+
+<section id="tour"><div class="wrap">
+  <div class="sec-head"><span class="eyebrow">Tour</span><h2>Take a look around.</h2></div>
+  <div class="split"><div class="txt"><span class="eyebrow">Live TV</span><h3>A guide that feels like real TV.</h3><p>Preview any channel instantly, see what's on now and next, and press one button to start a programme from the beginning.</p><ul><li><svg class="i"><use href="#i-check"/></svg>Guide or list view</li><li><svg class="i"><use href="#i-check"/></svg>Catch-up on supported channels</li><li><svg class="i"><use href="#i-check"/></svg>Favourite channels on your home screen</li></ul></div><div class="shot"><img src="site/guide.jpg" alt="Live TV guide with a channel preview" loading="lazy"></div></div>
+  <div class="split rev"><div class="txt"><span class="eyebrow">Movies & shows</span><h3>Every title gets the full treatment.</h3><p>Backdrops, IMDb ratings, cast, trailers and every episode laid out by season — with progress bars so you always know where you were.</p></div><div class="shot"><img src="site/detail.jpg" alt="Movie page with rating, plot and play button" loading="lazy"></div></div>
+  <div class="split"><div class="txt"><span class="eyebrow">Player</span><h3>Subtitles and quality, one tap away.</h3><p>Press S while watching to pick subtitles in your language, resize them, fix the sync, or change the stream quality.</p></div><div class="shot"><img src="site/player.jpg" alt="Player with the subtitles and quality menu open" loading="lazy"></div></div>
+  <div class="split rev"><div class="txt"><span class="eyebrow">Profiles</span><h3>Who's watching?</h3><p>Up to six profiles, each with their own list, favourites and history.</p></div><div class="shot"><img src="site/profiles.jpg" alt="Profile picker" loading="lazy"></div></div>
+</div></section>
+
+<div class="wrap"><div class="band"><div><h2>Ready to press play?</h2><p>Install takes about two minutes. You'll paste one line into Terminal — the guide walks you through every step.</p></div><button class="btn" data-open-wizard><svg class="i"><use href="#i-dl"/></svg>Download for Mac</button></div></div>
+
+<section id="faq"><div class="wrap">
+  <div class="sec-head"><span class="eyebrow">FAQ</span><h2>Questions, answered.</h2></div>
+  <div class="faq">
+    <details><summary>Is Nova TV free?</summary><p>Yes. Nova TV is a free player. It doesn't include any channels or content — you use it with your own IPTV subscription.</p></details>
+    <details><summary>What do I need to log in?</summary><p>The details your IPTV provider gave you: a server URL, username and password (Xtream Codes), or an M3U link.</p></details>
+    <details><summary>Which Macs does it work on?</summary><p>Any Mac running a recent version of macOS — both Apple Silicon (M1 to M4) and Intel. The installer picks the right version automatically.</p></details>
+    <details><summary>Why install with Terminal?</summary><p>Nova TV isn't sold through the App Store, so macOS would block a normal download. The one-line installer downloads it straight from GitHub and sets it up so it opens without warnings.</p></details>
+    <details><summary>How do updates work?</summary><p>Automatically. Nova TV checks for updates in the background and installs them for you.</p></details>
+    <details><summary>A movie won't play or has no sound — what now?</summary><p>Some files use audio formats the built-in player can't decode. Press "Open in VLC" in the player to watch it in VLC (free from videolan.org).</p></details>
+  </div>
+</div></section>
+</main>
+
+<footer><div class="wrap"><span>Nova TV · A player for your own IPTV subscription. No content is included or provided.</span><a href="https://github.com/IanTBC/nova-tv">View on GitHub</a></div></footer>
+
+<!-- install wizard -->
+<div class="wz" id="wz" role="dialog" aria-modal="true" aria-labelledby="wzTitle">
+  <div class="wz-card">
+    <button class="wz-x" data-close aria-label="Close"><svg class="i"><use href="#i-x"/></svg></button>
+    <span class="eyebrow" id="wzTitle">Install Nova TV</span>
+    <div class="steps" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
+
+    <div class="step" data-step="1">
+      <h3>Open Terminal</h3>
+      <p>Terminal is a built-in Mac app. Press these keys together to open Spotlight, type <b style="color:var(--ink)">Terminal</b> and press Return.</p>
+      <div class="keys"><span class="key">⌘ Cmd</span>+<span class="key">Space</span>→<span class="key" style="font-family:var(--fb)">Terminal</span>→<span class="key">Return ⏎</span></div>
+      <p>A small window with text will open. That's it — leave it open.</p>
+    </div>
+
+    <div class="step" data-step="2">
+      <h3>Copy the install command</h3>
+      <p>Click <b style="color:var(--ink)">Copy</b> — this one line downloads Nova TV from GitHub and installs it.</p>
+      <div class="cmd"><code id="cmd">curl -fsSL https://raw.githubusercontent.com/IanTBC/nova-tv/main/install.sh | bash</code><button class="btn sm" id="copyBtn"><svg class="i"><use href="#i-copy"/></svg>Copy</button></div>
+    </div>
+
+    <div class="step" data-step="3">
+      <h3>Paste it and press Return</h3>
+      <p>Click inside the Terminal window, paste with these keys, then press Return.</p>
+      <div class="keys"><span class="key">⌘ Cmd</span>+<span class="key">V</span>→<span class="key">Return ⏎</span></div>
+      <p>If it asks for your Mac password, type it (you won't see the letters) and press Return.</p>
+    </div>
+
+    <div class="step" data-step="4">
+      <h3>Wait a minute or two</h3>
+      <p>You'll see it download and install. When it's finished, Nova TV opens by itself.</p>
+      <div class="term">Nova TV — installing for your Mac<br>Downloading (1 of 3)…<div class="bar"><span></span></div>Unpacking…<br>Installing to Applications…<br><b>✓ Nova TV is installed. Opening it now — enjoy!</b></div>
+    </div>
+
+    <div class="step" data-step="5" style="text-align:center">
+      <svg class="done-ic" viewBox="0 0 120 120" aria-hidden="true"><circle cx="60" cy="60" r="54"/><path d="M38 62 53 77 84 44"/></svg>
+      <h3>You're all set!</h3>
+      <p>In Nova TV, choose <b style="color:var(--ink)">Username &amp; Password</b> and enter the server URL, username and password from your IPTV provider. Enjoy the show.</p>
+    </div>
+
+    <div class="wz-nav"><button class="btn sm ghost" id="prevBtn">Back</button><span class="count" id="count"></span><button class="btn sm accent" id="nextBtn">Next</button></div>
+  </div>
+</div>
+<div class="toast" id="toast">Copied!</div>
+
+<script>
+(function(){
+  var wz=document.getElementById('wz'),steps=[].slice.call(wz.querySelectorAll('.step')),bars=[].slice.call(wz.querySelectorAll('.steps i')),cur=1,N=steps.length;
+  var prev=document.getElementById('prevBtn'),next=document.getElementById('nextBtn'),count=document.getElementById('count');
+  function show(n){cur=Math.max(1,Math.min(N,n));steps.forEach(function(s){s.classList.toggle('on',+s.dataset.step===cur)});bars.forEach(function(b,i){b.classList.toggle('on',i<cur)});
+    prev.style.visibility=cur===1||cur===N?'hidden':'visible';count.textContent='Step '+cur+' of '+N;
+    next.textContent=cur===1?"Terminal is open":cur===2?"I copied it":cur===3?"Done, it's running":cur===4?"Nova TV opened":"Finish";}
+  function open(){show(1);wz.classList.add('open');next.focus()}
+  function close(){wz.classList.remove('open')}
+  document.querySelectorAll('[data-open-wizard]').forEach(function(b){b.addEventListener('click',open)});
+  wz.querySelector('[data-close]').addEventListener('click',close);
+  wz.addEventListener('click',function(e){if(e.target===wz)close()});
+  document.addEventListener('keydown',function(e){if(e.key==='Escape')close()});
+  prev.addEventListener('click',function(){show(cur-1)});
+  next.addEventListener('click',function(){if(cur===N)return close();show(cur+1)});
+  var t=document.getElementById('toast');
+  document.getElementById('copyBtn').addEventListener('click',function(){
+    var txt=document.getElementById('cmd').textContent;
+    (navigator.clipboard?navigator.clipboard.writeText(txt):Promise.reject()).catch(function(){var r=document.createRange();r.selectNode(document.getElementById('cmd'));getSelection().removeAllRanges();getSelection().addRange(r);document.execCommand('copy')});
+    this.innerHTML='<svg class="i"><use href="#i-check"/></svg>Copied';t.classList.add('show');setTimeout(function(){t.classList.remove('show')},1600);
+    setTimeout(function(){show(3)},700);
+  });
+})();
+</script>
+</body>
+</html>
