@@ -198,10 +198,11 @@ const player = (() => {
       else if (sub.status === 'none') s += '<div class="note">No subtitles found for this title yet.</div>';
       (sub.groups || []).forEach((g) => {
         const on = sub.lang === g.lang;
-        s += `<button class="opt ${on ? 'on' : ''}" data-act="sub-lang" data-lang="${esc(g.lang)}">${esc(g.name)}<small>${on && sub.status === 'loading' ? 'loading…' : g.items.length + (g.items.length === 1 ? ' file' : ' files')}</small></button>`;
+        s += `<button class="opt ${on ? 'on' : ''}" data-act="sub-lang" data-lang="${esc(g.lang)}">${esc(g.name)}<small>${on && sub.status === 'loading' ? 'loading…' : g.items.length + (g.items.length === 1 ? ' file' : ' files')} ${on ? '▾' : '▸'}</small></button>`;
+        if (on && g.items.length > 1) {
+          s += g.items.map((f, i) => `<button class="opt file ${i === sub.idx ? 'cur' : ''}" data-act="sub-file" data-lang="${esc(g.lang)}" data-i="${i}" title="${esc(f.label)}"><span>${i === sub.idx ? '● ' : ''}${i + 1}. ${esc(f.label.replace(/\.(srt|vtt|sub|ass)$/i, ''))}</span></button>`).join('');
+        }
       });
-      const g = sub.groups?.find((x) => x.lang === sub.lang);
-      if (g && g.items.length > 1) s += `<button class="opt" data-act="sub-next" style="color:#FF8A66">Out of sync? Try another version <small>${sub.idx + 1} / ${g.items.length}</small></button>`;
       s += `<div class="steppers">
         <div class="stepper"><span>Size</span><button data-act="sub-size" data-d="-1" aria-label="Smaller">−</button><b>${Math.round((S.settings.subScale || 1) * 100)}%</b><button data-act="sub-size" data-d="1" aria-label="Bigger">+</button></div>
         <div class="stepper"><span>Sync</span><button data-act="sub-sync" data-d="-1" aria-label="Earlier">−</button><b>${sub.offset > 0 ? '+' : ''}${sub.offset.toFixed(2)}s</b><button data-act="sub-sync" data-d="1" aria-label="Later">+</button></div>
@@ -231,7 +232,9 @@ const player = (() => {
     }
     q += '</div>';
     const ext = `<div class="ext"><span>No sound or won't play? Some files need a full desktop player.</span><button class="btn small ghost" data-act="p-external" style="color:#EEF0FA">${ic('external')} Open in ${S.settings.player === 'iina' ? 'IINA' : 'VLC'}</button></div>`;
+    const keep = p.scrollTop;
     p.innerHTML = s + q + ext;
+    p.scrollTop = keep;
   }
   function togglePanel(force) {
     const p = $('#pPanel');
@@ -430,6 +433,7 @@ const player = (() => {
     else if (a === 'sub-off') subsOff();
     else if (a === 'sub-lang') selectSub(b.dataset.lang, 0);
     else if (a === 'sub-next') selectSub(sub.lang, sub.idx + 1);
+    else if (a === 'sub-file') selectSub(b.dataset.lang, Number(b.dataset.i));
     else if (a === 'sub-size') { S.settings.subScale = Math.min(1.8, Math.max(0.6, Math.round(((S.settings.subScale || 1) + Number(b.dataset.d) * 0.1) * 10) / 10)); saveSettings(); applySubScale(); renderPanel(); }
     else if (a === 'sub-sync') { sub.offset = Math.round((sub.offset + Number(b.dataset.d) * 0.25) * 100) / 100; sub.last = '\u0000'; renderPanel(); }
     else if (a === 'q-level') { eng.setLevel(Number(b.dataset.i)); setTimeout(renderPanel, 300); toast(b.dataset.i === '-1' ? 'Quality: Auto' : `Quality: ${b.textContent.replace(/(Full HD|HD|Data saver)$/, '').trim()}`); }

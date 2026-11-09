@@ -603,6 +603,9 @@ kbd { font-family: var(--f-mono); font-size: 11px; color: var(--dim); border: 1p
 .p-next i { width: 18px; height: 18px; }
 .p-quality-tag { padding: 6px 12px; border-radius: 999px; background: rgba(238,240,250,.12); font: 500 12px var(--f-mono); }
 
+.p-panel .opt.file { padding: 7px 14px 7px 26px; font-size: 12.5px; font-weight: 500; color: #B9BFD6; border-radius: 12px; }
+.p-panel .opt.file span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.p-panel .opt.file.cur { color: #FF8A66; font-weight: 700; background: rgba(255,112,72,.1); }
 /* ---------- mini player ---------- */
 body.mini { background: #000; overflow: hidden; }
 .mini-root { position: fixed; inset: 0; -webkit-app-region: drag; background: #000; }
