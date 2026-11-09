@@ -26,6 +26,9 @@ function posterCard(kind, it) {
     <div class="pbody"><div class="pt">${esc(Meta.clean(it.name).title || it.name)}</div><div class="ps">${esc([it.year, kind === 'series' ? 'Series' : ''].filter(Boolean).join(' · ') || '—')}</div></div>
   </button>`;
 }
+function rankCard(kind, it, n) {
+  return `<div class="rank"><b aria-hidden="true">${n}</b>${posterCard(kind, it)}</div>`;
+}
 function landCard(h) {
   const pct = h.dur ? Math.min(100, (h.pos / h.dur) * 100) : 0;
   return `<div class="land" data-act="resume" data-key="${esc(h.key)}" role="button" tabindex="0">
@@ -110,6 +113,10 @@ async function renderHome(el) {
   const onNow = (favLive.length ? favLive : recentLive.length ? recentLive : live.items.slice(0, 14)).slice(0, 16);
   const topCats = (d) => [...d.cats].sort((a, b) => (d.counts.get(b.id) || 0) - (d.counts.get(a.id) || 0)).filter((c) => (d.counts.get(c.id) || 0) >= 6);
 
+  const charts = await Charts.build(movies.items, series.items).catch(() => ({ topMovies: [], topSeries: [], services: [] }));
+  if (S.view !== 'home') return;
+  const top = [...charts.topMovies.slice(0, 3).map((it) => ({ kind: 'movie', it })), ...charts.topSeries.slice(0, 3).map((it) => ({ kind: 'series', it }))].filter((f) => f.it.poster);
+  if (top.length >= 3) feat.splice(0, feat.length, ...top);
   const slide = (f, i) => {
     const it = f.it, d = Meta.cached(it, f.kind);
     const t = Meta.clean(it.name).title || it.name;
@@ -118,7 +125,7 @@ async function renderHome(el) {
       <div class="bb-art ${d?.background ? '' : 'blur'}" style="background-image:${cssUrl(d?.background || it.poster)}"></div>
       <div class="bb-shade"></div>
       <div class="bb-copy">
-        <span class="eyebrow"><span class="pdot"></span>${f.kind === 'movie' ? 'Movie' : 'Series'} · Just added</span>
+        <span class="eyebrow"><span class="pdot"></span>${f.kind === 'movie' ? 'Movie' : 'Series'} · ${top.length >= 3 ? '#' + ((f.kind === 'movie' ? charts.topMovies : charts.topSeries).indexOf(f.it) + 1) + ' trending today' : 'Just added'}</span>
         <div class="bb-title">${d?.logo ? `<img class="bb-logo" src="${esc(d.logo)}" alt="${esc(t)}">` : `<h1>${esc(t)}</h1>`}</div>
         <div class="hero-meta">${chips([it.year && { t: it.year, cls: 'mono' }, (d?.rating || it.rating) && { html: d?.rating ? `<span class="imdb"><em>IMDb</em>${d.rating.toFixed(1)}</span>` : `★ ${(+it.rating).toFixed(1)}`, cls: 'star' }, d?.genres, d?.runtime])}</div>
         <p>${esc(d?.plot || it.plot || '')}</p>
@@ -132,6 +139,9 @@ async function renderHome(el) {
 
   let rows = '';
   if (hist.length) rows += row(`Continue watching${S.person ? ' for ' + S.person.name : ''}`, hist.map(landCard).join(''));
+  if (charts.topMovies.length >= 3) rows += row('Top 10 movies today', charts.topMovies.map((m, i) => rankCard('movie', m, i + 1)).join(''), { sub: 'Trending worldwide · on your subscription' });
+  if (charts.topSeries.length >= 3) rows += row('Top 10 TV shows today', charts.topSeries.map((m, i) => rankCard('series', m, i + 1)).join(''), { sub: 'Trending worldwide · on your subscription' });
+  charts.services.forEach((sv) => { rows += row(`Popular on ${sv.name}`, sv.items.map((x) => posterCard(x.kind, x.it)).join(''), { sub: `${sv.items.length} titles you can watch` }); });
   if (onNow.length) rows += row('On now', onNow.map(onCard).join(''), { sub: favLive.length ? 'Your favorite channels, live' : 'Live channels', link: 'live', linkLabel: 'TV guide' });
   if (rm.length) rows += row('Recently added movies', rm.map((m) => posterCard('movie', m)).join(''), { link: 'movies' });
   if (rs.length) rows += row('New episodes', rs.map((s) => posterCard('series', s)).join(''), { link: 'series' });

@@ -159,3 +159,55 @@ const Subs = (() => {
   }
   return { list, load, parse, pick };
 })();
+
+/* ---------------- trending & streaming-service charts ---------------- */
+const Charts = (() => {
+  const SRC = {
+    topMovies: 'https://cinemeta-catalogs.strem.io/top/catalog/movie/top.json',
+    topSeries: 'https://cinemeta-catalogs.strem.io/top/catalog/series/top.json',
+  };
+  const SVC = 'https://7a82163c306e-stremio-netflix-catalog-addon.baby-beamup.club/catalog';
+  const SERVICES = [['nfx', 'Netflix'], ['amp', 'Prime Video'], ['atp', 'Apple TV+'], ['dnp', 'Disney+'], ['hbm', 'HBO Max']];
+  async function get(url) {
+    const key = 'chart.' + url;
+    const c = store.get(key, null);
+    if (c && Date.now() - c.t < 3600e3) return c.list;
+    try {
+      const r = await fetchJSON(url, 15000);
+      const list = (r?.metas || []).map((m) => ({ id: m.id, name: m.name, year: String(m.releaseInfo || m.year || '').slice(0, 4) }));
+      store.set(key, { t: Date.now(), list });
+      return list;
+    } catch { return c?.list || []; }
+  }
+  const key = (s) => norm(Meta.clean(s).title).replace(/^(the|a|an)\s+/, '').replace(/&/g, 'and').replace(/[^a-z0-9]/g, '');
+  function index(items) {
+    const m = new Map();
+    items.forEach((it) => { const k = key(it.name); if (k.length > 1) { const a = m.get(k) || []; a.push(it); m.set(k, a); } });
+    return m;
+  }
+  function match(list, idx, n) {
+    const out = [], seen = new Set();
+    for (const c of list) {
+      const arr = idx.get(key(c.name));
+      if (!arr) continue;
+      const it = arr.find((x) => c.year && x.year && Math.abs(x.year - c.year) <= 1) || (arr.some((x) => x.year) && c.year ? null : arr[0]);
+      if (!it || seen.has(it.id)) continue;
+      seen.add(it.id); it.imdb ||= c.id; out.push(it);
+      if (out.length >= n) break;
+    }
+    return out;
+  }
+  async function build(movies, series) {
+    const mi = index(movies), si = index(series);
+    const [tm, ts, ...svc] = await Promise.all([get(SRC.topMovies), get(SRC.topSeries),
+      ...SERVICES.flatMap(([id]) => [get(`${SVC}/movie/${id}.json`), get(`${SVC}/series/${id}.json`)])]);
+    const services = SERVICES.map(([id, name], i) => {
+      const mv = match(svc[i * 2], mi, 20).map((it) => ({ kind: 'movie', it }));
+      const sr = match(svc[i * 2 + 1], si, 20).map((it) => ({ kind: 'series', it }));
+      const mix = []; for (let k = 0; mix.length < 20 && (k < mv.length || k < sr.length); k++) { if (sr[k]) mix.push(sr[k]); if (mv[k]) mix.push(mv[k]); }
+      return { id, name, items: mix.slice(0, 20) };
+    }).filter((s) => s.items.length >= 3);
+    return { topMovies: match(tm, mi, 10), topSeries: match(ts, si, 10), services };
+  }
+  return { build };
+})();

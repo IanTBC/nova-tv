@@ -606,6 +606,9 @@ kbd { font-family: var(--f-mono); font-size: 11px; color: var(--dim); border: 1p
 .p-panel .opt.file { padding: 7px 14px 7px 26px; font-size: 12.5px; font-weight: 500; color: #B9BFD6; border-radius: 12px; }
 .p-panel .opt.file span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
 .p-panel .opt.file.cur { color: #FF8A66; font-weight: 700; background: rgba(255,112,72,.1); }
+.rank { display: flex; align-items: flex-end; flex: none; }
+.rank > b { font: 700 150px/0.8 var(--f-display); letter-spacing: -.08em; color: var(--bg); -webkit-text-stroke: 2.5px color-mix(in srgb, var(--ink) 55%, transparent); margin-right: -26px; position: relative; z-index: 0; user-select: none; }
+.rank .poster { width: 172px; position: relative; z-index: 1; }
 /* ---------- mini player ---------- */
 body.mini { background: #000; overflow: hidden; }
 .mini-root { position: fixed; inset: 0; -webkit-app-region: drag; background: #000; }

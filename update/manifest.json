@@ -2,9 +2,9 @@
   "ui": {
     "version": "2.0.2",
     "url": "ui-2.0.2.json",
-    "sha256": "55d0a3ad28e36ac9539a843f2cf30adca26ecb737e9ce93e520a8c0b91dd6eb5",
+    "sha256": "1d7249b51115549bbc958dff0b3116cd9c05e81be46a7f016154e1191633eaa9",
     "minShell": 2,
-    "notes": "Choose any subtitle file"
+    "notes": "Smart home: Top 10 today, popular on Netflix, Prime Video, Apple TV+ and more; pick any subtitle file"
   },
   "shell": {
     "version": "2.0.0",
