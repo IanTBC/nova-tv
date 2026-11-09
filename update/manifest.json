@@ -1,10 +1,10 @@
 {
   "ui": {
-    "version": "2.0.3",
-    "url": "ui-2.0.3.json",
-    "sha256": "6017773fad9ca2411e65e29222d32032a0f1739c4b1ffe11a65000fd102858af",
+    "version": "2.0.4",
+    "url": "ui-2.0.4.json",
+    "sha256": "b2c969d68baf6b0286a88be48ae26b086aadf4979bc9bc158eef42cd875346da",
     "minShell": 2,
-    "notes": "Smoother live TV start"
+    "notes": "Live TV starts at the live edge with minimal delay"
   },
   "shell": {
     "version": "2.0.0",

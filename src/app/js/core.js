@@ -371,6 +371,26 @@ class Engine {
     this.v = video; this.onState = onState; this.token = 0;
     this.hls = null; this.ts = null; this.cur = null;
     video.addEventListener('playing', () => { this.clearWatch(); this.onState('playing'); });
+    // Live: hide the initial burst, jump once to the live edge, then catch up gently.
+    const edge = () => { try { const b = video.buffered; return b.length ? b.end(b.length - 1) : 0; } catch { return 0; } };
+    const tryJump = () => {
+      if (!this.cur?.live && !this.isLiveHls()) return;
+      if (this.jumped) return;
+      const e = edge();
+      if (!e) return;
+      this.jumped = true;
+      if (e - video.currentTime > 1.2) video.currentTime = Math.max(0, e - 0.6);
+      setTimeout(() => { video.style.opacity = ''; }, 120);
+    };
+    video.addEventListener('progress', tryJump);
+    video.addEventListener('canplay', tryJump);
+    setInterval(() => {
+      if (!this.cur || video.paused || !(this.cur.live || this.isLiveHls())) { if (video.playbackRate !== 1) video.playbackRate = 1; return; }
+      const lat = edge() - video.currentTime;
+      if (lat > 8) video.currentTime = edge() - 0.8;
+      else if (lat > 2.5) video.playbackRate = 1.06;
+      else if (lat < 1.0) video.playbackRate = 1;
+    }, 1000);
     video.addEventListener('waiting', () => this.cur && this.onState('buffering'));
     video.addEventListener('canplay', () => this.cur && this.onState('ready'));
     video.addEventListener('error', () => {
@@ -391,14 +411,17 @@ class Engine {
     this.wd = setTimeout(() => { if (t === this.token && this.v.readyState < 3) this.next(); }, ms);
   }
   clearWatch() { clearTimeout(this.wd); }
+  isLiveHls() { return !!(this.hls && this.hls.levels?.[this.hls.currentLevel]?.details?.live); }
   attach(s) {
     const t = ++this.token;
-    this.cur = s; this.retries = 0;
+    this.cur = s; this.retries = 0; this.jumped = false;
+    this.v.style.opacity = s.live ? '0' : '';
+    if (s.live) setTimeout(() => { if (t === this.token) this.v.style.opacity = ''; }, 6000);
     this.onState('loading');
     this.watch();
     const v = this.v;
     if (s.type === 'hls' && window.Hls?.isSupported()) {
-      const hls = (this.hls = new Hls({ enableWorker: true, liveSyncDurationCount: 4, liveMaxLatencyDurationCount: 12, maxLiveSyncPlaybackRate: 1, backBufferLength: 60, maxBufferLength: 30, startFragPrefetch: true, manifestLoadingTimeOut: 15000, fragLoadingTimeOut: 25000, capLevelToPlayerSize: false }));
+      const hls = (this.hls = new Hls({ enableWorker: true, liveSyncDurationCount: 2, liveMaxLatencyDurationCount: 8, maxLiveSyncPlaybackRate: 1.08, lowLatencyMode: true, backBufferLength: 60, maxBufferLength: 30, startFragPrefetch: true, manifestLoadingTimeOut: 15000, fragLoadingTimeOut: 25000, capLevelToPlayerSize: false }));
       hls.on(Hls.Events.MANIFEST_PARSED, () => { if (t === this.token) { v.play().catch(() => {}); this.onState('tracks'); } });
       hls.on(Hls.Events.AUDIO_TRACKS_UPDATED, () => this.onState('tracks'));
       hls.on(Hls.Events.LEVEL_SWITCHED, () => this.onState('level'));
@@ -415,7 +438,7 @@ class Engine {
     } else if (s.type === 'mpegts' && window.mpegts?.isSupported()) {
       const p = (this.ts = mpegts.createPlayer(
         { type: 'mpegts', isLive: !!s.live, url: s.url },
-        { enableWorker: true, enableStashBuffer: true, stashInitialSize: 1024 * 1024, lazyLoad: !s.live, liveBufferLatencyChasing: false, liveSync: false, autoCleanupSourceBuffer: true, autoCleanupMaxBackwardDuration: 60, autoCleanupMinBackwardDuration: 30, fixAudioTimestampGap: false }
+        { enableWorker: true, enableStashBuffer: !s.live, stashInitialSize: 128 * 1024, lazyLoad: !s.live, liveBufferLatencyChasing: false, liveSync: false, autoCleanupSourceBuffer: true, autoCleanupMaxBackwardDuration: 60, autoCleanupMinBackwardDuration: 30, fixAudioTimestampGap: false }
       ));
       p.on(mpegts.Events.ERROR, () => { if (t === this.token) this.next(); });
       p.on(mpegts.Events.MEDIA_INFO, () => this.onState('tracks'));
