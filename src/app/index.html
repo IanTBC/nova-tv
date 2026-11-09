@@ -20,16 +20,16 @@
         <button class="seg-btn" data-mode="m3u">M3U Link</button>
       </div>
       <form id="loginForm" autocomplete="off">
-        <label class="field"><span>Playlist name</span><input name="name" placeholder="My IPTV" /></label>
+        <label class="field"><span>Playlist name</span><input name="name" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="My IPTV" /></label>
         <div class="mode-xtream">
-          <label class="field"><span>Server URL</span><input name="server" placeholder="http://line.example.com:8080" /></label>
+          <label class="field"><span>Server URL</span><input name="server" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="http://line.example.com:8080" /></label>
           <div class="row2">
-            <label class="field"><span>Username</span><input name="username" /></label>
-            <label class="field"><span>Password</span><input name="password" type="password" /></label>
+            <label class="field"><span>Username</span><input name="username" autocapitalize="off" autocorrect="off" spellcheck="false" /></label>
+            <label class="field"><span>Password</span><input name="password" autocapitalize="off" autocorrect="off" spellcheck="false" type="password" /></label>
           </div>
         </div>
         <div class="mode-m3u hidden">
-          <label class="field"><span>M3U URL</span><input name="m3u" placeholder="http://…/get.php?username=…&password=…&type=m3u_plus" /></label>
+          <label class="field"><span>M3U URL</span><input name="m3u" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="http://…/get.php?username=…&password=…&type=m3u_plus" /></label>
           <p class="hint">Paste the full link from your provider. If it contains <b>username=…&amp;password=…</b>, Nova logs in with those details automatically to unlock the full Movies &amp; TV Shows sections.</p>
         </div>
         <div id="loginError" class="form-error hidden"></div>

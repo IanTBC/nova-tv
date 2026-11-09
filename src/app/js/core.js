@@ -143,7 +143,17 @@ class XtreamProvider {
     return fetchJSON(`${this.base}/player_api.php?username=${this.u}&password=${this.pw}${action ? '&action=' + action : ''}${extra}`, action ? 60000 : 20000);
   }
   async auth() {
-    const r = await this.api('');
+    // Some providers only answer known IPTV apps: retry identifying as one.
+    let r, lastErr;
+    const order = [store.get('settings', {}).ua || 'default', 'vlc', 'smarters', 'tivimate'].filter((v, i, a) => a.indexOf(v) === i);
+    for (const ua of order) {
+      try {
+        await window.nova?.setUserAgent?.(ua);
+        r = await this.api('');
+        if (r && r.user_info) { const st = store.get('settings', {}); if ((st.ua || 'default') !== ua) { st.ua = ua; store.set('settings', st); if (typeof S !== 'undefined') S.settings.ua = ua; } break; }
+      } catch (e) { lastErr = e; if (!window.nova) break; }
+    }
+    if (!r && lastErr) throw new Error(/40[134]/.test(lastErr.message) ? "The server refused the login. Check the username and password (they're case-sensitive) and the server URL." : lastErr.message);
     if (!r || !r.user_info) throw new Error("This doesn't look like an Xtream Codes server. Double-check the server URL.");
     if (String(r.user_info.auth) !== '1') throw new Error('Wrong username or password');
     const ui = r.user_info;

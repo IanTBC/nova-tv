@@ -1,10 +1,10 @@
 {
   "ui": {
-    "version": "2.0.0",
-    "url": "",
-    "sha256": "",
+    "version": "2.0.1",
+    "url": "ui-2.0.1.json",
+    "sha256": "a42d723dad149320326f485832586e79be60131d1aebd46626be8f779d482583",
     "minShell": 2,
-    "notes": ""
+    "notes": "Login fix for providers that only allow known IPTV apps"
   },
   "shell": {
     "version": "2.0.0",
