@@ -374,7 +374,7 @@ class Engine {
     this.edge = () => { try { const b = video.buffered; return b.length ? b.end(b.length - 1) : 0; } catch { return 0; } };
     const edge = this.edge;
     setInterval(() => {
-      if (!this.cur || video.paused || !(this.cur.live || this.isLiveHls())) { if (video.playbackRate !== 1) video.playbackRate = 1; return; }
+      if (!this.cur || video.paused || this.cur.dvr || !(this.cur.live || this.isLiveHls())) { if (video.playbackRate !== 1) video.playbackRate = 1; return; }
       const lat = edge() - video.currentTime;
       if (lat > 8) video.currentTime = edge() - 0.8;
       else if (lat > 2.5) video.playbackRate = 1.06;
@@ -438,7 +438,7 @@ class Engine {
     this.watch();
     const v = this.v;
     if (s.type === 'hls' && window.Hls?.isSupported()) {
-      const hls = (this.hls = new Hls({ enableWorker: true, liveSyncDurationCount: 2, liveMaxLatencyDurationCount: 6, maxLiveSyncPlaybackRate: 1.08, lowLatencyMode: true, initialLiveManifestSize: 1, backBufferLength: 60, maxBufferLength: 30, startFragPrefetch: true, manifestLoadingTimeOut: 15000, fragLoadingTimeOut: 25000, capLevelToPlayerSize: false }));
+      const hls = (this.hls = new Hls({ enableWorker: true, ...(s.dvr ? { backBufferLength: 900, liveMaxLatencyDurationCount: Infinity } : {}), liveSyncDurationCount: 2, liveMaxLatencyDurationCount: s.dvr ? Infinity : 6, maxLiveSyncPlaybackRate: s.dvr ? 1 : 1.08, lowLatencyMode: true, initialLiveManifestSize: 1, backBufferLength: s.dvr ? 900 : 60, maxBufferLength: 30, startFragPrefetch: true, manifestLoadingTimeOut: 15000, fragLoadingTimeOut: 25000, capLevelToPlayerSize: false }));
       hls.on(Hls.Events.MANIFEST_PARSED, () => { if (t === this.token) { v.play().catch(() => {}); this.onState('tracks'); } });
       hls.on(Hls.Events.AUDIO_TRACKS_UPDATED, () => this.onState('tracks'));
       hls.on(Hls.Events.LEVEL_SWITCHED, () => this.onState('level'));

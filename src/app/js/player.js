@@ -31,7 +31,7 @@ const player = (() => {
     if (!item) return;
     const h = eng.currentHeight || video.videoHeight;
     const q = h ? `${h >= 2000 ? '4K' : h + 'p'}${eng.levels().length ? (eng.autoLevel ? ' · Auto' : '') : ''}` : '';
-    $('#pBadges').innerHTML = ((item.kind === 'live' || item.kind === 'kicklive') ? '<span class="chip live">LIVE</span>' : item.kind === 'catchup' ? '<span class="chip">Catch-up</span>' : '') + (q ? `<span class="p-quality-tag">${esc(q)}</span>` : '');
+    $('#pBadges').innerHTML = (item.kind === 'kicklive' ? `<button class="chip live" data-act="p-golive" id="pGoLive" title="Jump to live">LIVE</button>` : item.kind === 'live' ? '<span class="chip live">LIVE</span>' : item.kind === 'catchup' ? '<span class="chip">Catch-up</span>' : '') + (q ? `<span class="p-quality-tag">${esc(q)}</span>` : '');
   }
 
   /* ---------------- open ---------------- */
@@ -42,8 +42,8 @@ const player = (() => {
     $('#pError').classList.add('hidden');
     const live = it.kind === 'live' || it.kind === 'kicklive';
     $('#pProgress').classList.toggle('live', live);
-    $('#pBack10').classList.toggle('hidden', live);
-    $('#pFwd10').classList.toggle('hidden', live);
+    $('#pBack10').classList.toggle('hidden', it.kind === 'live');
+    $('#pFwd10').classList.toggle('hidden', it.kind === 'live');
     const nav = live || it.kind === 'episode';
     $('#pPrev').classList.toggle('hidden', !nav);
     $('#pNext').classList.toggle('hidden', !nav);
@@ -108,7 +108,7 @@ const player = (() => {
     loadEpg(ch);
   }
   function openKick(k) {
-    common({ kind: k.live ? 'kicklive' : 'kickvod', id: 'kick:' + k.url, title: k.title, sub: k.sub, img: k.img }, [{ url: k.url, type: 'hls', live: !!k.live }]);
+    common({ kind: k.live ? 'kicklive' : 'kickvod', id: 'kick:' + k.url, title: k.title, sub: k.sub, img: k.img }, [{ url: k.url, type: 'hls', live: !!k.live, dvr: !!k.live }]);
   }
   function openCatchup(ch, prog) {
     const src = S.provider.timeshiftSources?.(ch, prog.start, prog.end);
@@ -232,7 +232,7 @@ const player = (() => {
     const vod = item.kind === 'movie' || item.kind === 'episode';
     // subtitles column
     let s = '<div class="col"><div class="ph">Subtitles</div>';
-    if (!vod) s += `<div class="note">Subtitles aren't available for ${item.kind === 'live' ? 'live TV' : 'catch-up TV'}.</div>`;
+    if (!vod) s += `<div class="note">Subtitles aren't available for ${item.kind === 'live' ? 'live TV' : item.kind.startsWith('kick') ? 'Kick streams' : 'catch-up TV'}.</div>`;
     else {
       s += `<button class="opt ${!sub.lang ? 'on' : ''}" data-act="sub-off">Off</button>`;
       if (sub.status === 'searching' || sub.status === 'idle') s += '<div class="note">Searching OpenSubtitles…</div>';
@@ -329,7 +329,14 @@ const player = (() => {
 
   function updateTime() {
     if (!item) return;
-    if (item.kind === 'live' || item.kind === 'kicklive') { $('#pTime').textContent = fmtClock(new Date()); return; }
+    if (item.kind === 'live') { $('#pTime').textContent = fmtClock(new Date()); return; }
+    if (item.kind === 'kicklive') {
+      let edge = 0; try { edge = video.buffered.end(video.buffered.length - 1); } catch {}
+      const behind = Math.max(0, edge - video.currentTime);
+      $('#pTime').textContent = behind > 6 ? `−${fmtTime(behind)} behind live` : fmtClock(new Date());
+      const gl = $('#pGoLive'); if (gl) gl.textContent = behind > 6 ? 'Go live' : 'LIVE';
+      return;
+    }
     const d = video.duration || 0, c = video.currentTime || 0;
     $('#pTime').textContent = `${fmtTime(c)} / ${fmtTime(d)}`;
     if (!seeking && d) {
@@ -453,8 +460,9 @@ const player = (() => {
     const a = b.dataset.act;
     if (a === 'p-close') close();
     else if (a === 'p-toggle') toggle();
+    else if (a === 'p-golive') { try { video.currentTime = video.buffered.end(video.buffered.length - 1) - 1; } catch {} }
     else if (a === 'p-back10') video.currentTime = Math.max(0, video.currentTime - 10);
-    else if (a === 'p-fwd10') video.currentTime = Math.min(video.duration || 0, video.currentTime + 10);
+    else if (a === 'p-fwd10') { let mx = video.duration; if (!isFinite(mx)) { try { mx = video.buffered.end(video.buffered.length - 1) - 1; } catch { mx = video.currentTime; } } video.currentTime = Math.min(mx || 0, video.currentTime + 10); }
     else if (a === 'p-prev') step(-1);
     else if (a === 'p-next') step(1);
     else if (a === 'p-next-ep') { const nx = nextEpisode(); if (nx) { persist(); openEpisode(item.series, item.info, nx.season, nx.id, { restart: true }); } }
@@ -504,7 +512,7 @@ const player = (() => {
     else if (k === 'p' || k === 'P') mini();
     else if (k === 'l' || k === 'L') { if (item?.list) { $('#pDrawer').classList.toggle('hidden'); if (!$('#pDrawer').classList.contains('hidden')) renderDrawer(); } }
     else if (k === 'ArrowLeft' && item?.kind !== 'live') video.currentTime = Math.max(0, video.currentTime - (e.shiftKey ? 30 : 10));
-    else if (k === 'ArrowRight' && item?.kind !== 'live') video.currentTime = Math.min(video.duration || 0, video.currentTime + (e.shiftKey ? 30 : 10));
+    else if (k === 'ArrowRight' && item?.kind !== 'live') { let mx = video.duration; if (!isFinite(mx)) { try { mx = video.buffered.end(video.buffered.length - 1) - 1; } catch { mx = video.currentTime; } } video.currentTime = Math.min(mx || 0, video.currentTime + (e.shiftKey ? 30 : 10)); }
     else if (k === 'ArrowUp') { if (item?.kind === 'live') step(-1); else { video.volume = Math.min(1, video.volume + 0.05); osd(`${Math.round(video.volume * 100)}% <small>Volume</small>`); } }
     else if (k === 'ArrowDown') { if (item?.kind === 'live') step(1); else { video.volume = Math.max(0, video.volume - 0.05); osd(`${Math.round(video.volume * 100)}% <small>Volume</small>`); } }
     else return true;

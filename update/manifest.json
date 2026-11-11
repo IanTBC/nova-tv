@@ -1,10 +1,10 @@
 {
   "ui": {
-    "version": "2.2.0",
-    "url": "ui-2.2.0.json",
-    "sha256": "85205bbc84bdaf34d4d10ad87184b3fe94b0e9e7956631bf037e49a51ed2944e",
+    "version": "2.2.1",
+    "url": "ui-2.2.1.json",
+    "sha256": "bd486273b5b1827a7aba96b2c8e4725332332d483da143332118410a28516401",
     "minShell": 2,
-    "notes": "Kick: log in to see your creators, live streams and past broadcasts"
+    "notes": "Kick: quality menu, rewind 10s in live streams, Go live, watch from the beginning"
   },
   "shell": {
     "version": "2.2.0",

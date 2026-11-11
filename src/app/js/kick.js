@@ -52,7 +52,7 @@ const Kick = (() => {
       id: v.video?.uuid || v.uuid || String(v.id), title: v.session_title || v.video?.title || 'Past broadcast',
       thumb: pic(v.thumbnail) || pic(v.video?.thumb), src: v.source || v.video?.source || '',
       start: v.start_time || v.created_at || '', dur: (v.duration || 0) / 1000, views: v.views ?? v.video?.views ?? 0,
-      category: v.categories?.[0]?.name || '',
+      category: v.categories?.[0]?.name || '', live: !!(v.is_live || v.video?.is_live || v.livestream?.is_live),
     })).filter((v) => v.src);
   }
   async function search(q) {
@@ -152,6 +152,7 @@ async function renderKickChannel(el, { slug }) {
         ${c.live && c.title ? `<p class="plot">${esc(c.title)}</p>` : c.bio ? `<p class="plot">${esc(c.bio)}</p>` : ''}
         <div class="bb-actions">
           ${c.live && c.playback ? `<button class="btn" data-act="kick-play-live" data-slug="${esc(slug)}">${ic('play', 'fill')} Watch live</button>` : ''}
+          ${c.live && vids[0]?.live ? `<button class="btn glassy" data-act="kick-play-vod" data-i="0">${ic('restart')} From the beginning</button>` : ''}
           <button class="btn glassy" data-act="kick-save" data-slug="${esc(slug)}">${ic(isSaved ? 'check' : 'plus')} ${isSaved ? 'Saved' : 'Save creator'}</button>
         </div>
       </div>
