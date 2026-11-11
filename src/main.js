@@ -8,7 +8,7 @@ const fs = require('fs');
 const crypto = require('crypto');
 const os = require('os');
 
-const SHELL_VERSION = '2.0.0';
+const SHELL_VERSION = '2.1.0';
 const SHELL_API = 2; // bump only when preload/IPC contract changes
 const UPDATE_BASE = 'https://raw.githubusercontent.com/IanTBC/nova-tv/main/update/';
 const BUNDLED_UI = path.join(__dirname, 'app');
@@ -195,7 +195,10 @@ app.whenReady().then(() => {
     const h = details.requestHeaders;
     const url = details.url;
     // only touch stream / panel traffic, not metadata & update services
-    if (!/strem\.io|metahub\.space|media-imdb\.com|media-amazon\.com|githubusercontent\.com|github\.com/.test(url)) {
+    if (/youtube(-nocookie)?\.com|ytimg\.com|googlevideo\.com|google\.com|gstatic\.com/.test(url)) {
+      // YouTube embeds (trailers) require a web referrer
+      h['Referer'] = 'https://iantbc.github.io/';
+    } else if (!/strem\.io|metahub\.space|media-imdb\.com|media-amazon\.com|githubusercontent\.com|github\.com|kick\.com/.test(url)) {
       delete h['Origin'];
       delete h['Referer'];
       if (currentUA) h['User-Agent'] = currentUA;

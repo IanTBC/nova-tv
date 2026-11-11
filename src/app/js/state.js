@@ -5,7 +5,7 @@
 
 const DEFAULT_SETTINGS = {
   theme: 'dark', liveFormat: 'auto', ua: 'default', player: 'vlc', sortMovies: 'default', sortSeries: 'default',
-  subLang: 'eng', subScale: 1, enhance: true, liveMode: 'guide',
+  subLang: 'eng', subScale: 1, enhance: true, liveMode: 'guide', hideAdult: true, pin: '', trailers: true,
 };
 const PERSON_COLORS = ['#FF7048', '#3FE0C5', '#5B7CFF', '#C77DFF', '#FFC266', '#FF6B7D'];
 
@@ -16,6 +16,7 @@ const S = {
   info: null,
   settings: { ...DEFAULT_SETTINGS, ...store.get('settings', {}) },
   data: { live: null, movies: null, series: null },
+  raw: { live: null, movies: null, series: null },
   loading: {},
   maps: { live: new Map(), movie: new Map(), series: new Map() },
   versions: new Map(), // live version key -> [channels]
@@ -47,8 +48,8 @@ const People = {
     const id = store.get(`person.${S.account.id}`, null);
     return list.find((p) => p.id === id) || null;
   },
-  use(p) { S.person = p; store.set(`person.${S.account.id}`, p.id); },
-  add(name, color) { const list = this.list(); const p = { id: uid(), name: name.trim() || 'Profile', color }; list.push(p); this.save(list); return p; },
+  use(p) { S.person = p; store.set(`person.${S.account.id}`, p.id); refilter(); },
+  add(name, color, kids = false) { const list = this.list(); const p = { id: uid(), name: name.trim() || 'Profile', color, kids }; list.push(p); this.save(list); return p; },
   update(id, patch) { const list = this.list().map((p) => (p.id === id ? { ...p, ...patch } : p)); this.save(list); if (S.person?.id === id) S.person = list.find((p) => p.id === id); },
   remove(id) {
     this.save(this.list().filter((p) => p.id !== id));
@@ -87,13 +88,12 @@ function loadSection(kind) {
   if (S.data[kind]) return Promise.resolve(S.data[kind]);
   if (S.loading[kind]) return S.loading[kind];
   S.loading[kind] = S.provider[kind]().then((d) => {
-    S.data[kind] = d;
+    S.raw[kind] = d;
     const map = S.maps[kind === 'movies' ? 'movie' : kind];
     map.clear();
     d.items.forEach((it) => map.set(it.id, it));
-    d.catName = new Map(d.cats.map((c) => [c.id, c.name]));
-    d.counts = new Map();
-    d.items.forEach((it) => d.counts.set(it.cat, (d.counts.get(it.cat) || 0) + 1));
+    S.data[kind] = applyFilter(d);
+    d = S.data[kind];
     if (kind === 'live') {
       S.versions.clear();
       d.items.forEach((c) => { const k = versionKey(c.name); if (!k) return; const arr = S.versions.get(k) || []; arr.push(c); S.versions.set(k, arr); });
@@ -102,6 +102,21 @@ function loadSection(kind) {
   }).catch((e) => { S.loading[kind] = null; throw e; });
   return S.loading[kind];
 }
+/* ---------------- kids profiles & adult filter ---------------- */
+const ADULT_RE = /\b(adults?|xxx|porn|erotic|for adults)\b|18\s*\+|\+\s*18|للكبار/i;
+const KIDS_RE = /kid|child|cartoon|anime|family|disney|nick|pixar|junior|toon|baby|cocomelon|أطفال|اطفال|كرتون|انمي/i;
+function applyFilter(raw) {
+  const kids = !!S.person?.kids, hide = kids || S.settings.hideAdult !== false;
+  let cats = raw.cats;
+  if (kids) cats = cats.filter((c) => KIDS_RE.test(c.name) && !ADULT_RE.test(c.name));
+  else if (hide) cats = cats.filter((c) => !ADULT_RE.test(c.name));
+  const ok = new Set(cats.map((c) => c.id));
+  const items = cats === raw.cats ? raw.items : raw.items.filter((it) => ok.has(it.cat) && !(hide && ADULT_RE.test(it.name)));
+  const d = { cats, items, catName: new Map(cats.map((c) => [c.id, c.name])), counts: new Map() };
+  items.forEach((it) => d.counts.set(it.cat, (d.counts.get(it.cat) || 0) + 1));
+  return d;
+}
+function refilter() { ['live', 'movies', 'series'].forEach((k) => { if (S.raw[k]) S.data[k] = applyFilter(S.raw[k]); }); }
 const versionsOf = (ch) => {
   const arr = S.versions.get(versionKey(ch.name)) || [ch];
   return arr.length > 1 ? arr.map((c) => ({ ch: c, q: qualityOf(c.name) })).sort((a, b) => b.q.rank - a.q.rank) : [];

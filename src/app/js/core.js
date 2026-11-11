@@ -252,11 +252,11 @@ class XtreamProvider {
   liveSources(ch, pref) {
     const mk = (ext) => `${this.base}/live/${this.u}/${this.pw}/${ch.id}.${ext}`;
     const fm = this.info?.formats || [];
-    const ts = { url: mk('ts'), type: 'mpegts', live: true }, hls = { url: mk('m3u8'), type: 'hls' };
-    if (pref === 'hls') return [hls, ts];
+    const ts = { url: mk('ts'), type: 'mpegts', live: true }, hls = { url: mk('m3u8'), type: 'hls', live: true };
     if (pref === 'ts') return [ts, hls];
+    if (fm.length && !fm.includes('m3u8')) return [ts];
     if (fm.length && !fm.includes('ts')) return [hls];
-    return [ts, hls];
+    return [hls, ts];
   }
   // catch-up: play a past programme (or the current one from its start)
   timeshiftSources(ch, startMs, endMs) {
@@ -338,8 +338,8 @@ class M3UProvider {
   async epgDay() { return []; }
   liveSources(ch, pref) {
     const u = ch.url;
-    if (/\.m3u8(\?|$)/i.test(u)) return [{ url: u, type: 'hls' }];
-    const ts = { url: u, type: 'mpegts', live: true }, hls = { url: u, type: 'hls' }, nat = { url: u, type: 'native' };
+    if (/\.m3u8(\?|$)/i.test(u)) return [{ url: u, type: 'hls', live: true }];
+    const ts = { url: u, type: 'mpegts', live: true }, hls = { url: u, type: 'hls', live: true }, nat = { url: u, type: 'native' };
     if (/\.ts(\?|$)/i.test(u)) return pref === 'hls' ? [hls, ts] : [ts, hls];
     if (/\.(mp4|mkv|webm)(\?|$)/i.test(u)) return [nat];
     return pref === 'hls' ? [hls, ts, nat] : [ts, hls, nat];
@@ -371,19 +371,8 @@ class Engine {
     this.v = video; this.onState = onState; this.token = 0;
     this.hls = null; this.ts = null; this.cur = null;
     video.addEventListener('playing', () => { this.clearWatch(); this.onState('playing'); });
-    // Live: hide the initial burst, jump once to the live edge, then catch up gently.
-    const edge = () => { try { const b = video.buffered; return b.length ? b.end(b.length - 1) : 0; } catch { return 0; } };
-    const tryJump = () => {
-      if (!this.cur?.live && !this.isLiveHls()) return;
-      if (this.jumped) return;
-      const e = edge();
-      if (!e) return;
-      this.jumped = true;
-      if (e - video.currentTime > 1.2) video.currentTime = Math.max(0, e - 0.6);
-      setTimeout(() => { video.style.opacity = ''; }, 120);
-    };
-    video.addEventListener('progress', tryJump);
-    video.addEventListener('canplay', tryJump);
+    this.edge = () => { try { const b = video.buffered; return b.length ? b.end(b.length - 1) : 0; } catch { return 0; } };
+    const edge = this.edge;
     setInterval(() => {
       if (!this.cur || video.paused || !(this.cur.live || this.isLiveHls())) { if (video.playbackRate !== 1) video.playbackRate = 1; return; }
       const lat = edge() - video.currentTime;
@@ -411,17 +400,45 @@ class Engine {
     this.wd = setTimeout(() => { if (t === this.token && this.v.readyState < 3) this.next(); }, ms);
   }
   clearWatch() { clearTimeout(this.wd); }
+  // Live start: keep picture + sound hidden while the server's catch-up burst
+  // arrives, then jump once to the live edge and reveal.
+  reveal(show) {
+    const v = this.v;
+    if (show) { if (v.dataset.hiding) { v.style.opacity = ''; v.muted = v.dataset.wasMuted === '1'; delete v.dataset.hiding; } return; }
+    if (!v.dataset.hiding) { v.dataset.wasMuted = v.muted ? '1' : '0'; v.dataset.hiding = '1'; }
+    v.style.opacity = '0'; v.muted = true;
+  }
+  liveStart(t) {
+    const v = this.v, t0 = Date.now();
+    let lastE = 0, lastT = t0, calm = 0;
+    this.reveal(false);
+    clearInterval(this.liveT);
+    this.liveT = setInterval(() => {
+      if (t !== this.token) return clearInterval(this.liveT);
+      const now = Date.now(), e = this.edge();
+      const rate = (e - lastE) / Math.max(0.05, (now - lastT) / 1000);
+      lastE = e; lastT = now;
+      if (v.readyState >= 3 && e > 0) calm = rate < 1.6 ? calm + 1 : 0;
+      if ((calm >= 3 && now - t0 > 700) || now - t0 > 8000) {
+        clearInterval(this.liveT);
+        if (e - v.currentTime > 1) v.currentTime = Math.max(0, e - 0.5);
+        const show = () => { if (t === this.token) this.reveal(true); };
+        v.addEventListener('seeked', show, { once: true });
+        setTimeout(show, 350);
+      }
+    }, 200);
+  }
   isLiveHls() { return !!(this.hls && this.hls.levels?.[this.hls.currentLevel]?.details?.live); }
   attach(s) {
     const t = ++this.token;
-    this.cur = s; this.retries = 0; this.jumped = false;
-    this.v.style.opacity = s.live ? '0' : '';
-    if (s.live) setTimeout(() => { if (t === this.token) this.v.style.opacity = ''; }, 6000);
+    this.cur = s; this.retries = 0;
+    this.reveal(true);
+    if (s.live) this.liveStart(t);
     this.onState('loading');
     this.watch();
     const v = this.v;
     if (s.type === 'hls' && window.Hls?.isSupported()) {
-      const hls = (this.hls = new Hls({ enableWorker: true, liveSyncDurationCount: 2, liveMaxLatencyDurationCount: 8, maxLiveSyncPlaybackRate: 1.08, lowLatencyMode: true, backBufferLength: 60, maxBufferLength: 30, startFragPrefetch: true, manifestLoadingTimeOut: 15000, fragLoadingTimeOut: 25000, capLevelToPlayerSize: false }));
+      const hls = (this.hls = new Hls({ enableWorker: true, liveSyncDurationCount: 2, liveMaxLatencyDurationCount: 6, maxLiveSyncPlaybackRate: 1.08, lowLatencyMode: true, initialLiveManifestSize: 1, backBufferLength: 60, maxBufferLength: 30, startFragPrefetch: true, manifestLoadingTimeOut: 15000, fragLoadingTimeOut: 25000, capLevelToPlayerSize: false }));
       hls.on(Hls.Events.MANIFEST_PARSED, () => { if (t === this.token) { v.play().catch(() => {}); this.onState('tracks'); } });
       hls.on(Hls.Events.AUDIO_TRACKS_UPDATED, () => this.onState('tracks'));
       hls.on(Hls.Events.LEVEL_SWITCHED, () => this.onState('level'));
@@ -452,6 +469,8 @@ class Engine {
   }
   teardown() {
     this.clearWatch();
+    clearInterval(this.liveT);
+    this.reveal(true);
     if (this.hls) { try { this.hls.destroy(); } catch {} this.hls = null; }
     if (this.ts) { try { this.ts.pause(); this.ts.unload(); this.ts.detachMediaElement(); this.ts.destroy(); } catch {} this.ts = null; }
     try { this.v.pause(); this.v.removeAttribute('src'); this.v.load(); } catch {}

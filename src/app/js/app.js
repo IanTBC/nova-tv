@@ -147,6 +147,28 @@ function renderAvatarMenu() {
 }
 
 /* =====================================================================
+   PIN
+   ===================================================================== */
+function askPin(onOk, { setNew = false } = {}) {
+  if (!setNew && !S.settings.pin) return onOk();
+  $('.pinbox')?.remove();
+  const d = document.createElement('div');
+  d.className = 'pinbox';
+  d.innerHTML = `<form class="pin-card"><h3>${setNew ? 'Choose a 4-digit PIN' : 'Enter PIN'}</h3><input inputmode="numeric" maxlength="4" pattern="\\d{4}" autocomplete="off" aria-label="PIN"><div class="pin-err hidden">Wrong PIN</div><div style="display:flex;gap:10px"><button class="btn accent" type="submit" style="flex:1">${setNew ? 'Save PIN' : 'Unlock'}</button><button class="btn ghost" type="button">Cancel</button></div></form>`;
+  document.body.appendChild(d);
+  const inp = d.querySelector('input');
+  setTimeout(() => inp.focus(), 30);
+  d.querySelector('.btn.ghost').onclick = () => d.remove();
+  d.querySelector('form').onsubmit = (e) => {
+    e.preventDefault();
+    const v = inp.value.trim();
+    if (setNew) { if (!/^\d{4}$/.test(v)) { d.querySelector('.pin-err').textContent = 'Use 4 digits'; d.querySelector('.pin-err').classList.remove('hidden'); return; } S.settings.pin = v; saveSettings(); d.remove(); toast('PIN saved'); return onOk(); }
+    if (v === S.settings.pin) { d.remove(); onOk(); } else { inp.value = ''; d.querySelector('.pin-err').classList.remove('hidden'); }
+  };
+}
+const kidsGuard = (fn) => (S.person?.kids ? askPin(fn) : fn());
+
+/* =====================================================================
    ROUTER
    ===================================================================== */
 const VIEW_MODE = { home: '', detail: '', live: 'fixed', movies: 'fixed', series: 'fixed', mylist: 'padded', search: 'padded', settings: 'padded' };
@@ -242,7 +264,8 @@ document.addEventListener('click', async (e) => {
   if (!b || b.closest('#player')) return;
   const a = b.dataset.act, id = b.dataset.id;
   switch (a) {
-    case 'go': go(b.dataset.view); break;
+    case 'go': if (b.dataset.view === 'settings') kidsGuard(() => go('settings')); else go(b.dataset.view); break;
+    case 'pin-set': (S.settings.pin ? (f) => askPin(f) : (f) => f())(() => askPin(() => go('settings', null, { push: false }), { setNew: true })); break;
     case 'back': back(); break;
     case 'open': go('detail', { kind: b.dataset.kind, id }); break;
     case 'play-movie': {
@@ -330,12 +353,13 @@ document.addEventListener('click', async (e) => {
     case 'who-pick': {
       const p = People.list().find((x) => x.id === id); if (!p) return;
       closeMenus();
+      if (S.person?.kids && !p.kids && b.dataset.unlocked !== '1' && S.settings.pin) { return askPin(() => { b.dataset.unlocked = '1'; b.click(); }); }
       const changed = S.person?.id !== p.id;
       People.use(p);
       if (!$('#who').classList.contains('hidden') || changed) startShell();
       break;
     }
-    case 'who-manage': closeMenus(); renderWho('manage'); break;
+    case 'who-manage': closeMenus(); kidsGuard(() => renderWho('manage')); break;
     case 'who-edit': renderWho('form', id); break;
     case 'who-add': renderWho('form'); break;
     case 'who-done': {

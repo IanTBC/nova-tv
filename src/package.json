@@ -1,7 +1,7 @@
 {
   "name": "nova-tv",
   "productName": "Nova TV",
-  "version": "1.0.0",
+  "version": "2.1.0",
   "description": "Nova TV \u2014 IPTV player for macOS",
   "main": "main.js",
   "scripts": {

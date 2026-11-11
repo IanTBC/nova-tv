@@ -142,6 +142,17 @@ async function renderHome(el) {
   if (charts.topMovies.length >= 3) rows += row('Top 10 movies today', charts.topMovies.map((m, i) => rankCard('movie', m, i + 1)).join(''), { sub: 'Trending worldwide · on your subscription' });
   if (charts.topSeries.length >= 3) rows += row('Top 10 TV shows today', charts.topSeries.map((m, i) => rankCard('series', m, i + 1)).join(''), { sub: 'Trending worldwide · on your subscription' });
   charts.services.forEach((sv) => { rows += row(`Popular on ${sv.name}`, sv.items.map((x) => posterCard(x.kind, x.it)).join(''), { sub: `${sv.items.length} titles you can watch` }); });
+  const watched = []; const seenW = new Set();
+  for (const h of hist) {
+    const it = h.kind === 'movie' ? S.maps.movie.get(h.id) : S.maps.series.get(h.seriesId);
+    const k = (h.kind === 'movie' ? 'movie' : 'series') + (it?.id || '');
+    if (!it || seenW.has(k)) continue; seenW.add(k);
+    watched.push({ kind: h.kind === 'movie' ? 'movie' : 'series', it });
+    if (watched.length >= 2) break;
+  }
+  const because = watched.length ? await Charts.because(watched, movies.items, series.items).catch(() => []) : [];
+  if (S.view !== 'home') return;
+  because.forEach((b) => { rows += row(b.title, b.items.map((x) => posterCard(b.kind, x)).join(''), { sub: b.sub }); });
   if (onNow.length) rows += row('On now', onNow.map(onCard).join(''), { sub: favLive.length ? 'Your favorite channels, live' : 'Live channels', link: 'live', linkLabel: 'TV guide' });
   if (rm.length) rows += row('Recently added movies', rm.map((m) => posterCard('movie', m)).join(''), { link: 'movies' });
   if (rs.length) rows += row('New episodes', rs.map((s) => posterCard('series', s)).join(''), { link: 'series' });
@@ -166,14 +177,34 @@ async function renderHome(el) {
     if (on) $(`.bb-slide[data-i="${i}"]`)?.classList.add('on');
   }));
   let cur = 0;
+  let trT = null;
+  const trailer = () => {
+    clearTimeout(trT);
+    $$('.bb-trailer').forEach((x) => x.remove());
+    if (!S.settings.trailers) return;
+    const f = feat[cur]; const d = Meta.cached(f.it, f.kind);
+    const yt = d?.trailer && /^[\w-]{11}$/.test(d.trailer) ? d.trailer : null;
+    if (!yt) return;
+    trT = setTimeout(() => {
+      const s = $(`.bb-slide[data-i="${cur}"]`); if (!s || S.view !== 'home' || player.open) return;
+      const fr = document.createElement('iframe');
+      fr.className = 'bb-trailer'; fr.title = 'Trailer'; fr.allow = 'autoplay; encrypted-media';
+      fr.src = `https://www.youtube-nocookie.com/embed/${yt}?autoplay=1&mute=1&controls=0&loop=1&playlist=${yt}&modestbranding=1&playsinline=1&rel=0&iv_load_policy=3&disablekb=1`;
+      fr.onload = () => setTimeout(() => fr.classList.add('on'), 1800);
+      s.querySelector('.bb-shade').before(fr);
+    }, 4000);
+  };
   const show = (i) => {
     cur = (i + feat.length) % feat.length;
     $$('.bb-slide').forEach((s) => s.classList.toggle('on', Number(s.dataset.i) === cur));
     $$('.bb-dots button').forEach((b, j) => b.classList.toggle('on', j === cur));
+    trailer();
   };
+  setTimeout(trailer, 1500);
   S.bbShow = show;
   clearInterval(bbTimer);
-  if (feat.length > 1) bbTimer = setInterval(() => { if (S.view === 'home' && !player.open && !$('#billboard')?.matches(':hover')) show(cur + 1); }, 9000);
+  if (feat.length > 1) bbTimer = setInterval(() => { if (S.view === 'home' && !player.open && !$('#billboard')?.matches(':hover') && !$('.bb-trailer.on')) show(cur + 1); }, 9000);
+  clearInterval(S.trRot); S.trRot = setInterval(() => { if ($('.bb-trailer.on') && S.view === 'home' && !$('#billboard')?.matches(':hover')) show(cur + 1); }, 30000);
 
   // on-now programme info
   const lim = limiter(3);
@@ -653,6 +684,15 @@ async function renderSettings(el) {
         <select class="select" data-set="subScale"><option value="0.8">Small</option><option value="1">Medium</option><option value="1.25">Large</option><option value="1.5">Extra large</option></select></div>
     </div>
     <div class="card">
+      <h3>Parental controls</h3>
+      <div class="set-row"><div class="sl"><b>PIN</b><small>${st.pin ? 'A PIN is set. It protects adult content, Settings and leaving a kids profile.' : 'Set a 4-digit PIN to protect adult content and kids profiles.'}</small></div>
+        <button class="btn small" data-act="pin-set">${st.pin ? 'Change PIN' : 'Set PIN'}</button></div>
+      <div class="set-row"><div class="sl"><b>Hide adult categories</b><small>Hides adult groups for everyone. Turning this off needs the PIN.</small></div>
+        <div class="switch" id="adultSwitch"><button data-v="1" class="${st.hideAdult !== false ? 'active' : ''}">Hide</button><button data-v="0" class="${st.hideAdult === false ? 'active' : ''}">Show</button></div></div>
+      <div class="set-row"><div class="sl"><b>Trailers on the home banner</b><small>Plays a muted trailer after a few seconds.</small></div>
+        <div class="switch" id="trSwitch"><button data-v="1" class="${st.trailers ? 'active' : ''}">On</button><button data-v="0" class="${!st.trailers ? 'active' : ''}">Off</button></div></div>
+    </div>
+    <div class="card">
       <h3>Profiles</h3>
       <div class="profiles-list">${People.list().map((p) => `<div class="profile-row ${p.id === S.person?.id ? 'current' : ''}"><span class="avatar" style="--pc:${p.color}">${esc(initials(p.name))}</span><div class="pmeta"><div class="pname">${esc(p.name)}</div><div class="phost">Own favorites, My List and Continue watching</div></div></div>`).join('')}</div>
       <button class="btn small" data-act="who-manage">${ic('users')} Manage profiles</button>
@@ -692,6 +732,16 @@ async function renderSettings(el) {
     st.theme = b.dataset.v; saveSettings(); applyTheme();
     $$('#themeSwitch button').forEach((x) => x.classList.toggle('active', x === b));
   });
+  $('#trSwitch', el).addEventListener('click', (e) => {
+    const b = e.target.closest('button'); if (!b) return;
+    st.trailers = b.dataset.v === '1'; saveSettings();
+    $$('#trSwitch button').forEach((x) => x.classList.toggle('active', x === b));
+  });
+  $('#adultSwitch', el).addEventListener('click', (e) => {
+    const b = e.target.closest('button'); if (!b) return;
+    const apply = () => { st.hideAdult = b.dataset.v === '1'; saveSettings(); refilter(); $$('#adultSwitch button').forEach((x) => x.classList.toggle('active', x === b)); };
+    if (b.dataset.v === '0') askPin(apply); else apply();
+  });
   $('#enhSwitch', el).addEventListener('click', (e) => {
     const b = e.target.closest('button'); if (!b) return;
     st.enhance = b.dataset.v === '1'; saveSettings();
@@ -718,6 +768,7 @@ function renderWho(mode = 'pick', editId = null) {
       <form class="who-form" id="whoForm">
         <div style="display:flex;justify-content:center"><span class="avatar big" id="whoPrev" style="--pc:${color}">${esc(initials(p.name || '?'))}</span></div>
         <label class="field" style="margin:0"><span>Name</span><input name="name" maxlength="20" value="${esc(p.name)}" placeholder="e.g. Sara" required></label>
+        <label class="kidsrow"><input type="checkbox" name="kids" ${p.kids ? 'checked' : ''}> <span><b>Kids profile</b><small>Only shows kids' categories. Leaving it needs your PIN.</small></span></label>
         <div class="swatches" id="whoSw">${PERSON_COLORS.map((c) => `<button type="button" class="${c === color ? 'on' : ''}" data-c="${c}" style="background:radial-gradient(circle at 35% 35%,#FFE2D6,${c} 62%)" aria-label="Colour"></button>`).join('')}</div>
         <div style="display:flex;gap:10px">
           <button class="btn accent" type="submit" style="flex:1">${editId ? 'Save' : 'Add profile'}</button>
@@ -738,8 +789,10 @@ function renderWho(mode = 'pick', editId = null) {
     });
     f.addEventListener('submit', (e) => {
       e.preventDefault();
-      if (editId) People.update(editId, { name: f.name.value.trim() || p.name, color });
-      else People.add(f.name.value, color);
+      const kids = f.kids.checked;
+      if (editId) People.update(editId, { name: f.name.value.trim() || p.name, color, kids });
+      else People.add(f.name.value, color, kids);
+      refilter();
       renderWho('manage');
     });
     setTimeout(() => f.name.focus(), 50);
@@ -747,7 +800,7 @@ function renderWho(mode = 'pick', editId = null) {
   }
   const manage = mode === 'manage';
   box.innerHTML = `<div class="who-in"><h1>${manage ? 'Manage profiles' : "Who's watching?"}</h1>
-    <div class="who-grid">${list.map((p) => `<button class="who-p" data-act="${manage ? 'who-edit' : 'who-pick'}" data-id="${esc(p.id)}"><span class="avatar big" style="--pc:${p.color}">${esc(initials(p.name))}</span><span class="nm">${esc(p.name)}</span>${manage ? `<span class="edit-dot">${ic('edit')}</span>` : ''}</button>`).join('')}
+    <div class="who-grid">${list.map((p) => `<button class="who-p" data-act="${manage ? 'who-edit' : 'who-pick'}" data-id="${esc(p.id)}"><span class="avatar big" style="--pc:${p.color}">${esc(initials(p.name))}</span><span class="nm">${esc(p.name)}${p.kids ? ' · Kids' : ''}</span>${manage ? `<span class="edit-dot">${ic('edit')}</span>` : ''}</button>`).join('')}
       ${list.length < 6 ? `<button class="who-p" data-act="who-add"><span class="add">${ic('plus')}</span><span class="nm">Add profile</span></button>` : ''}</div>
     <button class="btn ${manage ? 'accent' : 'ghost'}" data-act="${manage ? 'who-done' : 'who-manage'}">${manage ? 'Done' : 'Manage profiles'}</button></div>`;
 }

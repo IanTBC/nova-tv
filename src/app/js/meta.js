@@ -209,5 +209,19 @@ const Charts = (() => {
     }).filter((s) => s.items.length >= 3);
     return { topMovies: match(tm, mi, 10), topSeries: match(ts, si, 10), services };
   }
-  return { build };
+  // "Because you watched X": top titles in X's main genre that are on the subscription
+  async function because(recent, movies, series) {
+    const out = [];
+    const idx = { movie: index(movies), series: index(series) };
+    for (const r of recent) {
+      const d = await Meta.forItem(r.it, r.kind).catch(() => null);
+      const g = d?.genres?.split(' · ')[0];
+      if (!g) continue;
+      const list = await get(`https://cinemeta-catalogs.strem.io/top/catalog/${r.kind === 'series' ? 'series' : 'movie'}/top/genre=${encodeURIComponent(g)}.json`);
+      const items = match(list, idx[r.kind], 24).filter((x) => x.id !== r.it.id).slice(0, 20);
+      if (items.length >= 4) out.push({ title: `Because you watched ${Meta.clean(r.it.name).title || r.it.name}`, sub: g, kind: r.kind, items });
+    }
+    return out;
+  }
+  return { build, because };
 })();

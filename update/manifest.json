@@ -1,14 +1,14 @@
 {
   "ui": {
-    "version": "2.0.4",
-    "url": "ui-2.0.4.json",
-    "sha256": "b2c969d68baf6b0286a88be48ae26b086aadf4979bc9bc158eef42cd875346da",
+    "version": "2.1.0",
+    "url": "ui-2.1.0.json",
+    "sha256": "840bd728306203fc15f95efaabd2367ce6d83a62acec5d3af2b7103d420e30eb",
     "minShell": 2,
-    "notes": "Live TV starts at the live edge with minimal delay"
+    "notes": "Kids profiles & PIN, Because you watched, banner trailers, skip intro, up next, smoother live start"
   },
   "shell": {
-    "version": "2.0.0",
-    "notes": "",
+    "version": "2.1.0",
+    "notes": "Needed for banner trailers",
     "builds": {
       "arm64": {
         "parts": [
@@ -16,7 +16,7 @@
           "https://raw.githubusercontent.com/IanTBC/nova-tv/main/releases/mac-arm64/part-01",
           "https://raw.githubusercontent.com/IanTBC/nova-tv/main/releases/mac-arm64/part-02"
         ],
-        "sha256": "8cba9c8ab446a15f40a999785c9e0ad7f1408dff7a99927d5a285ae1ee2aa104"
+        "sha256": "f83be9c6a3923dec9cfceb92e2a03ed2003631b0b39912110c0700f25fc619b3"
       },
       "x64": {
         "parts": [
@@ -24,7 +24,7 @@
           "https://raw.githubusercontent.com/IanTBC/nova-tv/main/releases/mac-x64/part-01",
           "https://raw.githubusercontent.com/IanTBC/nova-tv/main/releases/mac-x64/part-02"
         ],
-        "sha256": "8d4d3f5e5e0c0a188985a998f05a5cf642e370410f0b3ed37c19f74b486f748b"
+        "sha256": "5edb7da8111212bddddb23967d03687daaaea1503cba0003e9474b564200f5db"
       }
     }
   }

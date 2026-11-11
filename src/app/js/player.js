@@ -59,7 +59,46 @@ const player = (() => {
     if (!$('#pDrawer').classList.contains('hidden')) renderDrawer();
     resetSubs();
     if (it.kind === 'movie' || it.kind === 'episode') autoSubs();
+    skipUsed = false; upCancelled = false; hideUpNext(); $('#pSkip').classList.add('hidden');
+    setMediaSession(it);
   }
+  /* ---------------- Control Center / media keys ---------------- */
+  function setMediaSession(it) {
+    if (!('mediaSession' in navigator)) return;
+    const art = it.img || it.ch?.logo || it.m?.poster || it.series?.poster || '';
+    try {
+      navigator.mediaSession.metadata = new MediaMetadata({ title: it.kind === 'episode' ? `${it.ep.title}` : it.title, artist: it.kind === 'episode' ? `${it.series.name} · S${it.season} E${it.ep.num}` : it.kind === 'live' ? `Live · ${it.ch.name}` : (it.sub || 'Nova TV'), album: 'Nova TV', artwork: art ? [{ src: art, sizes: '512x512' }] : [] });
+    } catch {}
+  }
+  if ('mediaSession' in navigator) {
+    const ms = navigator.mediaSession, on = (a, f) => { try { ms.setActionHandler(a, f); } catch {} };
+    on('play', () => video.play().catch(() => {}));
+    on('pause', () => video.pause());
+    on('seekbackward', () => { if (item && item.kind !== 'live') video.currentTime = Math.max(0, video.currentTime - 10); });
+    on('seekforward', () => { if (item && item.kind !== 'live') video.currentTime += 10; });
+    on('previoustrack', () => { if (item?.list) step(-1); });
+    on('nexttrack', () => { if (item?.kind === 'episode') { const nx = nextEpisode(); if (nx) { persist(); openEpisode(item.series, item.info, nx.season, nx.id, { restart: true }); } } else if (item?.list) step(1); });
+  }
+  /* ---------------- skip intro + up next ---------------- */
+  let skipUsed = false, upCancelled = false, upTimer = null;
+  function hideUpNext() { clearInterval(upTimer); upTimer = null; $('#pUpNext').classList.add('hidden'); }
+  function showUpNext(nx) {
+    if (upTimer || upCancelled) return;
+    const box = $('#pUpNext');
+    let n = 10;
+    const img = nx.img || item.info.backdrop || item.series.poster || '';
+    const draw = () => { box.innerHTML = `${img ? `<img src="${esc(img)}" alt="">` : '<span></span>'}<div class="un-t"><small>Next episode in ${n}s</small><b>E${nx.num} · ${esc(nx.title)}</b><div class="un-a"><button class="btn small" data-act="un-play">${ic('play', 'fill')} Play now</button><button class="btn small ghost" data-act="un-cancel" style="color:#EEF0FA">Cancel</button></div></div><div class="un-bar"><b style="width:${(10 - n) * 10}%"></b></div>`; };
+    draw(); box.classList.remove('hidden');
+    upTimer = setInterval(() => { n--; if (n <= 0) { hideUpNext(); persist(true); openEpisode(item.series, item.info, nx.season, nx.id, { restart: true }); } else draw(); }, 1000);
+  }
+  video.addEventListener('timeupdate', () => {
+    if (item?.kind !== 'episode' || !video.duration) return;
+    const t = video.currentTime, left = video.duration - t;
+    $('#pSkip').classList.toggle('hidden', skipUsed || t < 12 || t > 200);
+    const nx = nextEpisode();
+    if (nx && left < 25 && left > 1 && video.duration > 300) showUpNext(nx);
+    else if (upTimer && left >= 25) hideUpNext();
+  });
   function openLive(ch, list) {
     pushRecentLive(ch);
     store.set(pkey('lastCh'), ch.id);
@@ -272,11 +311,12 @@ const player = (() => {
   video.addEventListener('ended', () => {
     persist(true);
     const nx = nextEpisode();
-    if (nx) { toast(`Up next: E${nx.num} ${nx.title}`); openEpisode(item.series, item.info, nx.season, nx.id, { restart: true }); }
+    if (nx && !upCancelled) { hideUpNext(); toast(`Up next: E${nx.num} ${nx.title}`); openEpisode(item.series, item.info, nx.season, nx.id, { restart: true }); }
   });
   video.addEventListener('play', () => setIcon($('#pToggleIcon'), 'pause'));
   video.addEventListener('pause', () => { setIcon($('#pToggleIcon'), 'play'); showChrome(); });
   video.addEventListener('volumechange', () => {
+    if (video.dataset.hiding) return;
     $('#pVol').value = video.muted ? 0 : video.volume;
     setIcon($('#pVolIcon'), video.muted || video.volume === 0 ? 'mute' : 'volume');
     store.set('vol', { v: video.volume, m: video.muted });
@@ -358,7 +398,7 @@ const player = (() => {
     persist();
     clearInterval(epgT);
     eng.stop();
-    resetSubs();
+    resetSubs(); hideUpNext();
     const wasLive = item?.kind === 'live';
     item = null;
     if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
@@ -430,6 +470,9 @@ const player = (() => {
       else { persist(); openEpisode(item.series, item.info, item.season, id); }
       renderDrawer();
     }
+    else if (a === 'p-skip') { skipUsed = true; video.currentTime = Math.min(video.duration - 5, video.currentTime + 85); $('#pSkip').classList.add('hidden'); }
+    else if (a === 'un-play') { const nx = nextEpisode(); hideUpNext(); if (nx) { persist(true); openEpisode(item.series, item.info, nx.season, nx.id, { restart: true }); } }
+    else if (a === 'un-cancel') { upCancelled = true; hideUpNext(); }
     else if (a === 'sub-off') subsOff();
     else if (a === 'sub-lang') selectSub(b.dataset.lang, 0);
     else if (a === 'sub-next') selectSub(sub.lang, sub.idx + 1);
