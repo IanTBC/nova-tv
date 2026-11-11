@@ -41,7 +41,7 @@ const player = (() => {
     $('#pSub').textContent = it.sub || '';
     $('#pError').classList.add('hidden');
     const live = it.kind === 'live' || it.kind === 'kicklive';
-    $('#pProgress').classList.toggle('live', live);
+    $('#pProgress').classList.toggle('live', it.kind === 'live');
     $('#pBack10').classList.toggle('hidden', it.kind === 'live');
     $('#pFwd10').classList.toggle('hidden', it.kind === 'live');
     const nav = live || it.kind === 'episode';
@@ -335,6 +335,8 @@ const player = (() => {
       const behind = Math.max(0, edge - video.currentTime);
       $('#pTime').textContent = behind > 6 ? `−${fmtTime(behind)} behind live` : fmtClock(new Date());
       const gl = $('#pGoLive'); if (gl) gl.textContent = behind > 6 ? 'Go live' : 'LIVE';
+      const [a, b] = range();
+      if (!seeking && b > a) { const pc = Math.min(100, ((video.currentTime - a) / (b - a)) * 100); $('#pFill').style.width = pc + '%'; $('#pKnob').style.left = pc + '%'; $('#pBuffer').style.width = '100%'; }
       return;
     }
     const d = video.duration || 0, c = video.currentTime || 0;
@@ -349,18 +351,27 @@ const player = (() => {
 
   // seek bar
   const bar = $('#pProgress');
+  // seekable range: whole file for VOD, the kept window for Kick live
+  function range() {
+    if (item?.kind === 'kicklive') {
+      try { const s = video.seekable.length ? video.seekable : video.buffered; return [s.start(0), s.end(s.length - 1)]; } catch { return [0, 0]; }
+    }
+    return [0, video.duration || 0];
+  }
   const pctAt = (e) => { const r = bar.getBoundingClientRect(); return Math.min(1, Math.max(0, (e.clientX - r.left) / r.width)); };
   bar.addEventListener('mousemove', (e) => {
-    if (!video.duration || !isFinite(video.duration)) return;
+    const [a, b] = range(); if (!(b > a) || !isFinite(b)) return;
     const p = pctAt(e), ht = $('#pHoverTime');
-    ht.textContent = fmtTime(p * video.duration); ht.style.left = p * 100 + '%'; ht.classList.remove('hidden');
+    ht.textContent = item?.kind === 'kicklive' ? (b - (a + p * (b - a)) < 3 ? 'LIVE' : '−' + fmtTime(b - (a + p * (b - a)))) : fmtTime(a + p * (b - a));
+    ht.style.left = p * 100 + '%'; ht.classList.remove('hidden');
   });
   bar.addEventListener('mouseleave', () => $('#pHoverTime').classList.add('hidden'));
   bar.addEventListener('mousedown', (e) => {
-    if (!video.duration || item?.kind === 'live') return;
+    if (item?.kind === 'live') return;
+    const [a, b] = range(); if (!(b > a) || !isFinite(b)) return;
     seeking = true;
     const move = (ev) => { const p = pctAt(ev); $('#pFill').style.width = p * 100 + '%'; $('#pKnob').style.left = p * 100 + '%'; };
-    const up = (ev) => { seeking = false; video.currentTime = pctAt(ev) * video.duration; removeEventListener('mousemove', move); removeEventListener('mouseup', up); };
+    const up = (ev) => { seeking = false; const [a2, b2] = range(); video.currentTime = Math.min(b2 - 0.5, a2 + pctAt(ev) * (b2 - a2)); removeEventListener('mousemove', move); removeEventListener('mouseup', up); };
     move(e);
     addEventListener('mousemove', move); addEventListener('mouseup', up);
   });

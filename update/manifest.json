@@ -1,10 +1,10 @@
 {
   "ui": {
-    "version": "2.2.1",
-    "url": "ui-2.2.1.json",
-    "sha256": "bd486273b5b1827a7aba96b2c8e4725332332d483da143332118410a28516401",
+    "version": "2.2.2",
+    "url": "ui-2.2.2.json",
+    "sha256": "9944a074842a532694e2362058250db1e7fec856f9d48328aca1efa8682d8ae8",
     "minShell": 2,
-    "notes": "Kick: quality menu, rewind 10s in live streams, Go live, watch from the beginning"
+    "notes": "Drag the Kick live bar to any moment"
   },
   "shell": {
     "version": "2.2.0",
