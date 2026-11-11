@@ -13,6 +13,10 @@ contextBridge.exposeInMainWorld('nova', {
   reloadUi: () => ipcRenderer.invoke('reload-ui'),
   onUiUpdate: on('ui-update'),
   onShellUpdate: on('shell-update'),
+  kickStatus: () => ipcRenderer.invoke('kick-status'),
+  kickLogin: () => ipcRenderer.invoke('kick-login'),
+  kickLogout: () => ipcRenderer.invoke('kick-logout'),
+  kickFetch: (url) => ipcRenderer.invoke('kick-fetch', url),
   // mini player
   miniOpen: (payload) => ipcRenderer.invoke('mini-open', payload),
   miniExpand: (data) => ipcRenderer.invoke('mini-expand', data),

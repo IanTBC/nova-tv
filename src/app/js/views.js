@@ -693,6 +693,12 @@ async function renderSettings(el) {
         <div class="switch" id="trSwitch"><button data-v="1" class="${st.trailers ? 'active' : ''}">On</button><button data-v="0" class="${!st.trailers ? 'active' : ''}">Off</button></div></div>
     </div>
     <div class="card">
+      <h3>Kick</h3>
+      <div class="set-row"><div class="sl"><b>Official Kick API keys (optional)</b><small>A backup for showing who's live if Kick's website changes. Create a free app at kick.com/settings/developer and paste its Client ID and Secret. They stay on this Mac.</small></div></div>
+      <div class="row2"><label class="field"><span>Client ID</span><input id="kickId" value="${esc(st.kickId || '')}" autocomplete="off" spellcheck="false"></label><label class="field"><span>Client Secret</span><input id="kickSecret" type="password" value="${esc(st.kickSecret || '')}" autocomplete="off"></label></div>
+      <button class="btn small" id="kickSave">Save keys</button>
+    </div>
+    <div class="card">
       <h3>Profiles</h3>
       <div class="profiles-list">${People.list().map((p) => `<div class="profile-row ${p.id === S.person?.id ? 'current' : ''}"><span class="avatar" style="--pc:${p.color}">${esc(initials(p.name))}</span><div class="pmeta"><div class="pname">${esc(p.name)}</div><div class="phost">Own favorites, My List and Continue watching</div></div></div>`).join('')}</div>
       <button class="btn small" data-act="who-manage">${ic('users')} Manage profiles</button>
@@ -732,6 +738,7 @@ async function renderSettings(el) {
     st.theme = b.dataset.v; saveSettings(); applyTheme();
     $$('#themeSwitch button').forEach((x) => x.classList.toggle('active', x === b));
   });
+  $('#kickSave', el).addEventListener('click', () => { st.kickId = $('#kickId').value.trim(); st.kickSecret = $('#kickSecret').value.trim(); saveSettings(); toast('Kick keys saved'); });
   $('#trSwitch', el).addEventListener('click', (e) => {
     const b = e.target.closest('button'); if (!b) return;
     st.trailers = b.dataset.v === '1'; saveSettings();

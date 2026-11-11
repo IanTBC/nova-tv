@@ -8,7 +8,7 @@ const fs = require('fs');
 const crypto = require('crypto');
 const os = require('os');
 
-const SHELL_VERSION = '2.1.0';
+const SHELL_VERSION = '2.2.0';
 const SHELL_API = 2; // bump only when preload/IPC contract changes
 const UPDATE_BASE = 'https://raw.githubusercontent.com/IanTBC/nova-tv/main/update/';
 const BUNDLED_UI = path.join(__dirname, 'app');
@@ -218,6 +218,34 @@ app.whenReady().then(() => {
   ipcMain.handle('check-updates', () => checkForUpdates(true));
   ipcMain.handle('install-shell-update', () => installShellUpdate());
   ipcMain.handle('reload-ui', () => { mainWin?.loadFile(path.join(activeUi().dir, 'index.html')); return true; });
+
+  // ---------- Kick (each user logs in with their own Kick account) ----------
+  const kickSes = () => session.fromPartition('persist:kick');
+  const kickToken = async () => {
+    const c = await kickSes().cookies.get({ url: 'https://kick.com', name: 'session_token' });
+    return c[0] ? decodeURIComponent(c[0].value) : null;
+  };
+  ipcMain.handle('kick-status', async () => ({ loggedIn: !!(await kickToken()) }));
+  ipcMain.handle('kick-login', () => new Promise((resolve) => {
+    const w = new BrowserWindow({ width: 520, height: 760, title: 'Log in to Kick', parent: mainWin || undefined, modal: false, backgroundColor: '#0b0e0f',
+      webPreferences: { partition: 'persist:kick', contextIsolation: true, nodeIntegration: false } });
+    w.loadURL('https://kick.com/login');
+    let done = false;
+    const finish = (ok) => { if (done) return; done = true; clearInterval(t); resolve({ ok }); if (!w.isDestroyed()) w.close(); };
+    const t = setInterval(async () => { if (await kickToken()) finish(true); }, 1000);
+    w.on('closed', async () => finish(!!(await kickToken())));
+  }));
+  ipcMain.handle('kick-logout', async () => { await kickSes().clearStorageData(); return true; });
+  ipcMain.handle('kick-fetch', async (_e, url) => {
+    if (typeof url !== 'string' || !/^https:\/\/kick\.com\/api\//.test(url)) return { ok: false, status: 0 };
+    const tok = await kickToken();
+    try {
+      const r = await kickSes().fetch(url, { headers: { Accept: 'application/json', ...(tok ? { Authorization: 'Bearer ' + tok } : {}) } });
+      const text = await r.text();
+      let data = null; try { data = JSON.parse(text); } catch {}
+      return { ok: r.ok, status: r.status, data };
+    } catch (e) { return { ok: false, status: 0, error: String(e.message || e) }; }
+  });
 
   // mini player
   ipcMain.handle('mini-open', (_e, payload) => { openMini(payload); return true; });

@@ -31,7 +31,7 @@ const player = (() => {
     if (!item) return;
     const h = eng.currentHeight || video.videoHeight;
     const q = h ? `${h >= 2000 ? '4K' : h + 'p'}${eng.levels().length ? (eng.autoLevel ? ' · Auto' : '') : ''}` : '';
-    $('#pBadges').innerHTML = (item.kind === 'live' ? '<span class="chip live">LIVE</span>' : item.kind === 'catchup' ? '<span class="chip">Catch-up</span>' : '') + (q ? `<span class="p-quality-tag">${esc(q)}</span>` : '');
+    $('#pBadges').innerHTML = ((item.kind === 'live' || item.kind === 'kicklive') ? '<span class="chip live">LIVE</span>' : item.kind === 'catchup' ? '<span class="chip">Catch-up</span>' : '') + (q ? `<span class="p-quality-tag">${esc(q)}</span>` : '');
   }
 
   /* ---------------- open ---------------- */
@@ -40,7 +40,7 @@ const player = (() => {
     $('#pTitle').textContent = it.title;
     $('#pSub').textContent = it.sub || '';
     $('#pError').classList.add('hidden');
-    const live = it.kind === 'live';
+    const live = it.kind === 'live' || it.kind === 'kicklive';
     $('#pProgress').classList.toggle('live', live);
     $('#pBack10').classList.toggle('hidden', live);
     $('#pFwd10').classList.toggle('hidden', live);
@@ -106,6 +106,9 @@ const player = (() => {
     const cat = S.data.live?.catName.get(ch.cat) || '';
     common({ kind: 'live', id: ch.id, ch, list, title: ch.name, sub: `CH ${ch.num}${cat ? ' · ' + cat : ''}` }, S.provider.liveSources(ch, S.settings.liveFormat));
     loadEpg(ch);
+  }
+  function openKick(k) {
+    common({ kind: k.live ? 'kicklive' : 'kickvod', id: 'kick:' + k.url, title: k.title, sub: k.sub, img: k.img }, [{ url: k.url, type: 'hls', live: !!k.live }]);
   }
   function openCatchup(ch, prog) {
     const src = S.provider.timeshiftSources?.(ch, prog.start, prog.end);
@@ -326,7 +329,7 @@ const player = (() => {
 
   function updateTime() {
     if (!item) return;
-    if (item.kind === 'live') { $('#pTime').textContent = fmtClock(new Date()); return; }
+    if (item.kind === 'live' || item.kind === 'kicklive') { $('#pTime').textContent = fmtClock(new Date()); return; }
     const d = video.duration || 0, c = video.currentTime || 0;
     $('#pTime').textContent = `${fmtTime(c)} / ${fmtTime(d)}`;
     if (!seeking && d) {
@@ -509,5 +512,5 @@ const player = (() => {
     return true;
   }
 
-  return { openLive, openCatchup, openMovie, openEpisode, close, key, get open() { return !root.classList.contains('hidden'); } };
+  return { openKick, openLive, openCatchup, openMovie, openEpisode, close, key, get open() { return !root.classList.contains('hidden'); } };
 })();

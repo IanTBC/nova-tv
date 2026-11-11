@@ -1,14 +1,14 @@
 {
   "ui": {
-    "version": "2.1.0",
-    "url": "ui-2.1.0.json",
-    "sha256": "840bd728306203fc15f95efaabd2367ce6d83a62acec5d3af2b7103d420e30eb",
+    "version": "2.2.0",
+    "url": "ui-2.2.0.json",
+    "sha256": "85205bbc84bdaf34d4d10ad87184b3fe94b0e9e7956631bf037e49a51ed2944e",
     "minShell": 2,
-    "notes": "Kids profiles & PIN, Because you watched, banner trailers, skip intro, up next, smoother live start"
+    "notes": "Kick: log in to see your creators, live streams and past broadcasts"
   },
   "shell": {
-    "version": "2.1.0",
-    "notes": "Needed for banner trailers",
+    "version": "2.2.0",
+    "notes": "Adds the Kick login window",
     "builds": {
       "arm64": {
         "parts": [
@@ -16,7 +16,7 @@
           "https://raw.githubusercontent.com/IanTBC/nova-tv/main/releases/mac-arm64/part-01",
           "https://raw.githubusercontent.com/IanTBC/nova-tv/main/releases/mac-arm64/part-02"
         ],
-        "sha256": "f83be9c6a3923dec9cfceb92e2a03ed2003631b0b39912110c0700f25fc619b3"
+        "sha256": "3b926052f14638e3e1f65125f9d1b65763755f1a49e5c50d9891ce3a18501302"
       },
       "x64": {
         "parts": [
@@ -24,7 +24,7 @@
           "https://raw.githubusercontent.com/IanTBC/nova-tv/main/releases/mac-x64/part-01",
           "https://raw.githubusercontent.com/IanTBC/nova-tv/main/releases/mac-x64/part-02"
         ],
-        "sha256": "5edb7da8111212bddddb23967d03687daaaea1503cba0003e9474b564200f5db"
+        "sha256": "d40b26388ddbc62d4dd7379f9f483c41ef5ad5e1c01bab1cd0f76fa2419955ca"
       }
     }
   }

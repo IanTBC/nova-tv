@@ -171,8 +171,8 @@ const kidsGuard = (fn) => (S.person?.kids ? askPin(fn) : fn());
 /* =====================================================================
    ROUTER
    ===================================================================== */
-const VIEW_MODE = { home: '', detail: '', live: 'fixed', movies: 'fixed', series: 'fixed', mylist: 'padded', search: 'padded', settings: 'padded' };
-const TAB_OF = { home: 'home', live: 'live', movies: 'movies', series: 'series', mylist: 'mylist' };
+const VIEW_MODE = { kick: 'padded', kickch: '', home: '', detail: '', live: 'fixed', movies: 'fixed', series: 'fixed', mylist: 'padded', search: 'padded', settings: 'padded' };
+const TAB_OF = { kick: 'kick', kickch: 'kick', home: 'home', live: 'live', movies: 'movies', series: 'series', mylist: 'mylist' };
 function go(view, params = null, { push = true } = {}) {
   closeMenus();
   if (push && S.view && S.view !== view || (push && view === 'detail')) S.stack.push({ view: S.view, params: S.params, scroll: $('#view').scrollTop });
@@ -200,6 +200,8 @@ function go(view, params = null, { push = true } = {}) {
     mylist: () => renderMyList(page),
     search: () => renderSearch(page, params || {}),
     settings: () => renderSettings(page),
+    kick: () => renderKick(page),
+    kickch: () => renderKickChannel(page, params),
   })[view]?.();
 }
 function back() {
@@ -267,6 +269,12 @@ document.addEventListener('click', async (e) => {
     case 'go': if (b.dataset.view === 'settings') kidsGuard(() => go('settings')); else go(b.dataset.view); break;
     case 'pin-set': (S.settings.pin ? (f) => askPin(f) : (f) => f())(() => askPin(() => go('settings', null, { push: false }), { setNew: true })); break;
     case 'back': back(); break;
+    case 'kick-login': { const r = await window.nova.kickLogin(); if (r.ok) toast('Logged in to Kick'); go('kick', null, { push: false }); break; }
+    case 'kick-logout': await window.nova.kickLogout(); toast('Logged out of Kick'); go('kick', null, { push: false }); break;
+    case 'kick-open': go('kickch', { slug: b.dataset.slug }); break;
+    case 'kick-save': { const s = b.dataset.slug, l = Kick.saved(); const on = !l.includes(s); Kick.setSaved(on ? [...l, s] : l.filter((x) => x !== s)); b.innerHTML = `${ic(on ? 'check' : 'plus')} ${on ? 'Saved' : 'Save creator'}`; toast(on ? 'Creator saved' : 'Creator removed'); break; }
+    case 'kick-play-live': { const c = S.kick?.c; if (c?.playback) player.openKick({ title: c.name, sub: c.title || 'Live on Kick', url: c.playback, live: true, img: c.avatar }); break; }
+    case 'kick-play-vod': { const v = S.kick?.vids[Number(b.dataset.i)]; if (v) player.openKick({ title: v.title, sub: S.kick.c.name + ' · Past broadcast', url: v.src, live: false, img: v.thumb }); break; }
     case 'open': go('detail', { kind: b.dataset.kind, id }); break;
     case 'play-movie': {
       const m = S.maps.movie.get(id) || favs().movie?.[id];

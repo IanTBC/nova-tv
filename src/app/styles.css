@@ -630,6 +630,22 @@ kbd { font-family: var(--f-mono); font-size: 11px; color: var(--dim); border: 1p
 .kidsrow b { display: block; font-size: 14px; } .kidsrow small { color: var(--muted); font-size: 12px; }
 .bb-trailer { position: absolute; left: 50%; top: 50%; width: 140%; aspect-ratio: 16/9; transform: translate(-50%, -50%); border: 0; pointer-events: none; opacity: 0; transition: opacity 1.2s var(--ease); }
 .bb-trailer.on { opacity: 1; }
+.khead { display: flex; align-items: flex-end; gap: 16px; margin: 10px 0 26px; flex-wrap: wrap; }
+.khead > div:first-child { margin-right: auto; }
+.khead h1 { font-family: var(--f-display); font-weight: 700; font-size: 38px; letter-spacing: -.045em; margin-top: 8px; }
+.kicklogin { display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 28px 30px; border-radius: var(--r-xl); background: var(--surface); box-shadow: var(--shadow); margin-bottom: 30px; }
+.kicklogin h2 { font-family: var(--f-display); font-weight: 600; font-size: 22px; letter-spacing: -.03em; margin-bottom: 6px; }
+.kicklogin p { color: var(--muted); max-width: 60ch; }
+.kgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px; }
+.kcard { display: flex; align-items: center; gap: 14px; padding: 14px; border-radius: var(--r-lg); background: var(--surface); box-shadow: var(--shadow); text-align: left; transition: transform .45s var(--ease); min-width: 0; }
+.kcard:hover { transform: translateY(-3px); }
+.kcard.live { box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--danger) 45%, transparent), var(--shadow); }
+.kav { width: 56px; height: 56px; border-radius: 50%; overflow: hidden; flex: none; background: var(--surface-2); display: grid; place-items: center; }
+.kav img { width: 100%; height: 100%; object-fit: cover; }
+.kav.big { width: 84px; height: 84px; box-shadow: 0 0 0 3px var(--ink); }
+.kcard .km { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.kcard b { font-size: 15px; } .kcard small { font: 500 11px var(--f-mono); color: var(--muted); }
+.kcard em { font-style: normal; font-size: 12px; color: color-mix(in srgb, var(--ink) 75%, transparent); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 /* ---------- mini player ---------- */
 body.mini { background: #000; overflow: hidden; }
 .mini-root { position: fixed; inset: 0; -webkit-app-region: drag; background: #000; }
