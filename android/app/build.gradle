@@ -1,0 +1,28 @@
+plugins { id 'com.android.application' }
+
+android {
+    namespace 'com.ianbrown.novatv'
+    compileSdk 34
+    defaultConfig {
+        applicationId 'com.ianbrown.novatv.tv'
+        minSdk 21
+        targetSdk 34
+        versionCode Integer.parseInt(System.getenv('NOVA_VC') ?: '1')
+        versionName System.getenv('NOVA_VN') ?: '1.0.0'
+    }
+    signingConfigs {
+        release {
+            storeFile file(System.getenv('NOVA_KS') ?: 'missing.jks')
+            storePassword System.getenv('NOVA_KS_PASS')
+            keyAlias 'nova'
+            keyPassword System.getenv('NOVA_KS_PASS')
+        }
+    }
+    buildTypes {
+        release { minifyEnabled false; if (System.getenv('NOVA_KS')) signingConfig signingConfigs.release }
+    }
+    compileOptions { sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 }
+    buildFeatures { buildConfig true }
+}
+
+dependencies { implementation 'androidx.core:core:1.13.1' }

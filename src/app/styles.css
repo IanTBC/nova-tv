@@ -700,3 +700,28 @@ body.mini { background: #000; overflow: hidden; }
 .ambient i, .hero-stage .orbit, .spinner, .hero-poster, .preview .pv-empty .orbit { will-change: transform; }
 .nav-item, .cat, .season-tab, .seg-btn { transition-timing-function: var(--ease); }
 .view > * { will-change: opacity, transform; }
+
+/* =====================================================================
+   ANDROID TV (remote control) — only active with <html class="tv">
+   ===================================================================== */
+.tv, .tv * { cursor: none !important; }
+.tv :focus { outline: none; }
+.tv .row-arrow, .tv [data-act="p-mini"], .tv [data-act="p-fullscreen"], .tv .tab[data-view="kick"] { display: none !important; }
+.tv button:focus-visible, .tv a:focus-visible, .tv input:focus-visible, .tv select:focus-visible, .tv textarea:focus-visible,
+.tv button:focus, .tv a:focus, .tv select:focus {
+  outline: 4px solid var(--ink) !important; outline-offset: 4px;
+  box-shadow: 0 0 0 10px rgba(238,240,250,.12), 0 24px 50px -16px rgba(0,0,0,.85);
+  position: relative; z-index: 3;
+}
+.tv input:focus, .tv textarea:focus { outline: 4px solid var(--accent) !important; outline-offset: 2px; }
+.tv .btn:focus, .tv .tab:focus, .tv .seg-btn:focus, .tv .chip:focus { background: var(--ink) !important; color: var(--bg) !important; transform: scale(1.06); }
+.tv .poster:focus, .tv .cw:focus, .tv .ch-card:focus { transform: scale(1.08); border-radius: var(--r-md); }
+.tv .poster:focus .play-hover, .tv .cw:focus .play-hover { opacity: 1; }
+.tv .poster:focus .play-hover span { transform: scale(1); }
+.tv .chan:focus { transform: translateX(6px); background: var(--surface-2); }
+.tv .chan:focus .star { opacity: 1; }
+.tv .icon-btn:focus, .tv .avatar:focus { transform: scale(1.14); }
+.tv .player .icon-btn:focus { background: var(--ink) !important; color: var(--bg) !important; }
+.tv .row-track { scroll-padding: 0 80px; padding-top: 14px; padding-bottom: 18px; }
+.tv .poster, .tv .cw, .tv .btn, .tv .tab, .tv .icon-btn, .tv .chan { transition: transform .18s var(--ease), background .18s, color .18s, box-shadow .18s; }
+.tv ::-webkit-scrollbar { display: none; }
