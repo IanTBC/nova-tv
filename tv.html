@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Nova TV for Google TV & Android TV — install guide</title>
+<meta name="description" content="Install Nova TV on Google TV or Android TV in a few minutes with the free Downloader app.">
+<link rel="icon" href="site/icon.png">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;600;700&family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+:root{--bg:#0A0D19;--surface:#131729;--surface-2:#1B2036;--ink:#EEF0FA;--muted:#9CA3BF;--line:rgba(238,240,250,.1);--accent:#FF7048;--accent-text:#FF8A66;--mint:#3FE0C5;--glass:rgba(16,20,36,.66);--btn-bg:#EEF0FA;--btn-fg:#0A0D19;--shadow:0 1px 2px rgba(0,0,0,.4),0 18px 40px -18px rgba(0,0,0,.7);--fd:"Unbounded",system-ui,sans-serif;--fb:"Manrope",system-ui,sans-serif;--fm:"JetBrains Mono",ui-monospace,monospace;--ease:cubic-bezier(.2,.8,.2,1);--spring:cubic-bezier(.34,1.4,.64,1)}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 var(--fb);-webkit-font-smoothing:antialiased;overflow-x:hidden}
+a{color:inherit;text-decoration:none}button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:8px}
+h1,h2,h3{font-family:var(--fd);margin:0;letter-spacing:-.03em;line-height:1.05;text-wrap:balance}p{margin:0}
+.wrap{max-width:1200px;margin:0 auto;padding:0 24px}
+.ambient{position:fixed;inset:0;z-index:-1;pointer-events:none;overflow:hidden}
+.ambient i{position:absolute;width:70vmax;height:70vmax;border-radius:50%}
+.ambient i:nth-child(1){background:radial-gradient(circle,rgba(255,110,70,.16),transparent 62%);top:-30vmax;right:-25vmax;animation:d1 22s ease-in-out infinite alternate}
+.ambient i:nth-child(2){background:radial-gradient(circle,rgba(70,110,255,.18),transparent 62%);bottom:-35vmax;left:-25vmax;animation:d2 26s ease-in-out infinite alternate}
+@keyframes d1{to{transform:translate3d(-12vmax,10vmax,0)}}@keyframes d2{to{transform:translate3d(14vmax,-8vmax,0)}}
+.eyebrow{font:500 12px var(--fm);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);display:inline-flex;align-items:center;gap:8px}
+.eyebrow .dot{width:8px;height:8px;border-radius:50%;background:var(--mint);box-shadow:0 0 0 4px rgba(63,224,197,.22);animation:pulse 2.4s ease-in-out infinite}@keyframes pulse{50%{transform:scale(.7)}}
+.top{position:sticky;top:0;z-index:20;background:var(--glass);backdrop-filter:saturate(1.6) blur(18px);-webkit-backdrop-filter:saturate(1.6) blur(18px);border-bottom:1px solid var(--line)}
+.top .wrap{display:flex;align-items:center;gap:20px;height:68px}
+.brand{display:flex;align-items:center;gap:12px;font:700 18px var(--fd);letter-spacing:-.02em;margin-right:auto}.brand span{font-weight:500;color:var(--muted);margin-left:-6px}
+.logo{width:24px;height:24px;border-radius:50%;position:relative;background:radial-gradient(circle at 35% 35%,#FFD2C2,var(--accent) 60%)}.logo::after{content:"";position:absolute;inset:-5px -9px;border:2px solid var(--ink);border-radius:50%;transform:rotate(-24deg) scaleY(.38);opacity:.85}
+.nav{display:flex;gap:4px}.nav a{padding:8px 14px;border-radius:999px;font-weight:600;font-size:14px;color:var(--muted)}.nav a:hover{color:var(--ink)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:52px;padding:0 26px;border-radius:999px;background:var(--btn-bg);color:var(--btn-fg);font-weight:700;transition:transform .3s var(--spring)}.btn:hover{transform:translateY(-2px)}.btn:active{transform:scale(.96)}
+.btn.accent{background:var(--accent);color:#121628;box-shadow:0 12px 30px -10px rgba(255,112,72,.6)}.btn.ghost{background:transparent;color:var(--ink);box-shadow:inset 0 0 0 1.5px var(--line)}.btn.sm{min-height:40px;padding:0 18px;font-size:14px}
+svg.i{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.hero{padding:72px 0 40px;display:grid;gap:40px;grid-template-columns:1fr 1.15fr;align-items:center}
+.hero h1{font-size:clamp(40px,6vw,76px);font-weight:700;letter-spacing:-.045em;line-height:.98;margin:18px 0 18px}.hero h1 em{font-style:normal;color:var(--accent-text)}
+.lede{font-size:18px;color:var(--muted);max-width:46ch}.row{display:flex;gap:12px;flex-wrap:wrap;margin-top:28px}
+.facts{display:flex;gap:28px;margin-top:30px;flex-wrap:wrap}.facts div{font:500 11px var(--fm);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}.facts b{display:block;font:600 22px var(--fd);letter-spacing:-.03em;color:var(--ink);text-transform:none}
+.shot{position:relative;border-radius:22px;overflow:hidden;box-shadow:0 40px 100px -30px rgba(0,0,0,.8),0 0 0 1px var(--line);background:var(--surface)}
+.shot img{display:block;width:100%;height:auto}
+.shot.tilt{transform:perspective(1600px) rotateY(-8deg) rotateX(3deg);transition:transform .8s var(--ease)}.shot.tilt:hover{transform:none}
+.orbit{position:absolute;border-radius:50%;border:1.5px dashed rgba(238,240,250,.15);animation:spin 30s linear infinite;pointer-events:none}.orbit i{position:absolute;top:50%;left:-7px;width:14px;height:14px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 6px rgba(255,112,72,.22)}@keyframes spin{to{transform:rotate(360deg)}}
+.hero-stage{position:relative}.hero-stage .orbit{inset:-10% -6%;z-index:-1}
+section{padding:70px 0}.sec-head{max-width:640px;margin-bottom:34px}.sec-head h2{font-size:clamp(28px,3.6vw,44px);margin-top:12px}.sec-head p{color:var(--muted);margin-top:12px;font-size:17px}
+.hero2{padding:64px 0 24px;max-width:780px}
+.hero2 h1{font-size:clamp(36px,5vw,60px);font-weight:700;letter-spacing:-.045em;margin:16px 0}
+.code{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-top:26px;padding:22px 26px;border-radius:22px;background:var(--surface);box-shadow:0 0 0 1px var(--line)}
+.code b{font:600 clamp(18px,3vw,28px) var(--fm);letter-spacing:-.01em;color:var(--accent-text);word-break:break-all}
+.code small{display:block;font:500 12px var(--fm);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.steps{list-style:none;padding:0;margin:40px 0;display:grid;gap:16px;counter-reset:s}
+.steps li{counter-increment:s;display:grid;grid-template-columns:56px 1fr;gap:20px;padding:24px;border-radius:22px;background:var(--surface);box-shadow:0 0 0 1px var(--line)}
+.steps li::before{content:counter(s);width:56px;height:56px;border-radius:50%;display:grid;place-items:center;font:700 22px var(--fd);background:var(--accent);color:#121628}
+.steps h3{font-size:20px;margin-bottom:8px}.steps p{color:var(--muted)}.steps p+p{margin-top:8px}
+.path{display:inline-block;font:500 14px var(--fm);background:var(--surface-2);color:var(--ink);padding:2px 8px;border-radius:8px;margin:2px 0}
+table{width:100%;border-collapse:collapse;margin:16px 0 60px}td{padding:14px 16px;border-top:1px solid var(--line)}td:first-child{font:500 14px var(--fm);color:var(--accent-text);white-space:nowrap;width:220px}
+h2{font-size:28px;margin-top:20px}
+.note{color:var(--muted);font-size:15px;margin-top:10px}
+</style>
+</head>
+<body>
+<div class="ambient" aria-hidden="true"><i></i><i></i></div>
+<header class="top"><div class="wrap"><a class="brand" href="./"><span class="logo"></span>Nova <span>TV</span></a><nav class="nav" aria-label="Main"><a href="./">Mac app</a><a href="tv.html">TV app</a></nav></div></header>
+<main class="wrap">
+<section class="hero2">
+  <span class="eyebrow"><span class="dot"></span>Google TV · Android TV</span>
+  <h1>Nova TV on your TV.</h1>
+  <p class="lede">The same app as the Mac, built for the remote: Live TV with the guide, Movies, TV Shows, subtitles, quality, profiles and Top 10. Install it in about 5 minutes with the free Downloader app.</p>
+  <div class="code"><div><small>Type this in Downloader</small><b>iantbc.github.io/nova-tv/tv.apk</b></div></div>
+</section>
+
+<ol class="steps">
+  <li><div><h3>Install Downloader</h3><p>On the TV, go to search, type <b>Downloader</b> and install the free app <b>Downloader by AFTVnews</b> (orange icon).</p></div></li>
+  <li><div><h3>Turn on Developer options (one time)</h3><p>Open <span class="path">Settings → System → About</span>, scroll to <b>Android TV OS build</b> and press <b>OK</b> on it 7 times until it says <i>"You are now a developer"</i>.</p><p class="note">Google TV only lets you install apps from outside the Play Store after this. It doesn't change anything else.</p></div></li>
+  <li><div><h3>Allow Downloader to install apps</h3><p>Go to <span class="path">Settings → Apps → Security &amp; restrictions → Unknown sources</span> and switch <b>Downloader</b> on.</p><p class="note">On some TVs it's under <span class="path">Settings → Device Preferences → Security &amp; restrictions</span>.</p></div></li>
+  <li><div><h3>Download Nova TV</h3><p>Open Downloader, select the address box, type <b>iantbc.github.io/nova-tv/tv.apk</b> and press <b>Go</b>. When it finishes, press <b>Install</b>, then <b>Open</b>.</p><p class="note">Downloader may then ask to delete the file — press Delete, it's not needed anymore.</p></div></li>
+  <li><div><h3>Log in</h3><p>Enter your Server URL, Username and Password (or your M3U link), exactly like on the Mac. Nova TV now sits in your apps row — hold OK on it and choose <b>Move</b> to pin it to the front.</p></div></li>
+  <li><div><h3>Updates are automatic</h3><p>Design and feature updates arrive by themselves; you'll see <b>Restart now</b>. If a bigger update needs a reinstall, Nova TV shows <b>Install</b> — the first time, the TV asks you to allow Nova TV to install apps: switch it on, press Back and choose Install again.</p></div></li>
+</ol>
+
+<h2>Using the remote</h2>
+<table>
+<tr><td>Arrows</td><td>Move around. In Live TV the first OK previews a channel, the second opens it full screen.</td></tr>
+<tr><td>OK while watching</td><td>Pause / play and show the controls (then arrows move between the buttons: subtitles, quality, next episode…).</td></tr>
+<tr><td>◀ ▶ while watching</td><td>Back / forward 10 seconds (movies, episodes and catch-up).</td></tr>
+<tr><td>▲ ▼ while watching</td><td>Next / previous channel on Live TV (CH+ / CH− work too), volume on movies.</td></tr>
+<tr><td>Back</td><td>Close the controls, then the player, then go back. Press Back twice on Home to leave the app.</td></tr>
+<tr><td>Play/Pause, ⏪ ⏩</td><td>Work as expected if your remote has them.</td></tr>
+</table>
+</main>
+</body>
+</html>
