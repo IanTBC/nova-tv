@@ -27,5 +27,12 @@
         "sha256": "d40b26388ddbc62d4dd7379f9f483c41ef5ad5e1c01bab1cd0f76fa2419955ca"
       }
     }
+  },
+  "android": {
+    "version": "1.0.0",
+    "versionCode": 1,
+    "url": "https://raw.githubusercontent.com/IanTBC/nova-tv/main/tv.apk",
+    "sha256": "7068dfa396188cb0f78a2bc9224dc1ba7a1adbad3223990f80b53f6d768522d6",
+    "notes": "First Android TV release"
   }
 }
