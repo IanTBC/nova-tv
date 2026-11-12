@@ -725,3 +725,24 @@ body.mini { background: #000; overflow: hidden; }
 .tv .row-track { scroll-padding: 0 80px; padding-top: 14px; padding-bottom: 18px; }
 .tv .poster, .tv .cw, .tv .btn, .tv .tab, .tv .icon-btn, .tv .chan { transition: transform .18s var(--ease), background .18s, color .18s, box-shadow .18s; }
 .tv ::-webkit-scrollbar { display: none; }
+
+/* ---- TV performance: TV chips are far weaker than a Mac GPU ---- */
+.tv { --glass: rgba(16, 20, 36, .97); }
+.tv *, .tv *::before, .tv *::after { backdrop-filter: none !important; -webkit-backdrop-filter: none !important; }
+.tv .ambient { display: none !important; }
+.tv body { background: radial-gradient(70% 60% at 85% 0%, #1A1530 0%, #0A0D19 60%) fixed; }
+/* no permanent GPU layer per poster (hundreds of them choke a TV chip) */
+.tv .poster, .tv .land, .tv .oncard, .tv .ch-card, .tv .chan, .tv .epcard, .tv .g-row, .tv .view > *,
+.tv .hero-stage .orbit, .tv .hero-poster, .tv .preview .pv-empty .orbit { will-change: auto !important; contain: none; }
+.tv .bb-art { transition: none !important; transform: none !important; }
+.tv .poster:hover, .tv .cw:hover, .tv .ch-card:hover, .tv .chan:hover, .tv .btn:hover, .tv .icon-btn:hover { transform: none; }
+.tv .poster:hover .pimg img { transform: none; }
+.tv .chip.live::before, .tv .eyebrow .pdot, .tv .preview .pv-empty .orbit { animation: none !important; }
+.tv .view > *, .tv .page-in, .tv .who-in { animation-duration: .18s !important; }
+/* focus: animate transform only (cheap), shadow is static */
+.tv button:focus, .tv a:focus, .tv select:focus, .tv button:focus-visible { box-shadow: 0 0 0 9px rgba(238,240,250,.10) !important; }
+.tv .poster, .tv .cw, .tv .btn, .tv .tab, .tv .icon-btn, .tv .chan, .tv .ch-card { transition: transform .14s cubic-bezier(.2,.8,.2,1) !important; }
+.tv .poster:focus, .tv .cw:focus, .tv .ch-card:focus { will-change: transform; }
+/* while a video plays, nothing behind it is drawn */
+.tv.playing #shell, .tv.playing .ambient { visibility: hidden !important; }
+.tv.playing .player .p-controls, .tv.playing .player .p-top { transition: opacity .2s; }

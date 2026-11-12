@@ -1,10 +1,10 @@
 {
   "ui": {
-    "version": "2.2.2",
-    "url": "ui-2.2.2.json",
-    "sha256": "9944a074842a532694e2362058250db1e7fec856f9d48328aca1efa8682d8ae8",
+    "version": "2.3.0",
+    "url": "ui-2.3.0.json",
+    "sha256": "3b82aed6aadcb7ed0a3784310ebfaa7a604100540af472cfeb69d92f21a3b7df",
     "minShell": 2,
-    "notes": "Drag the Kick live bar to any moment"
+    "notes": "Smoother on TV"
   },
   "shell": {
     "version": "2.2.0",

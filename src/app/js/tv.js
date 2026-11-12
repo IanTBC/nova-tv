@@ -48,14 +48,24 @@
   }
   const items = (root) => [...root.querySelectorAll(SEL)].filter((el) => !el.parentElement.closest('button') && visible(el));
 
+  let fast = false, lastMove = 0;
+  function scroller(el, axis) {
+    for (let p = el.parentElement; p && p !== document.body; p = p.parentElement) {
+      const cs = getComputedStyle(p), o = axis === 'x' ? cs.overflowX : cs.overflowY;
+      if ((o === 'auto' || o === 'scroll') && (axis === 'x' ? p.scrollWidth > p.clientWidth + 2 : p.scrollHeight > p.clientHeight + 2)) return p;
+    }
+    return null;
+  }
   function focusEl(el) {
     if (!el) return;
+    const behavior = fast ? 'auto' : 'smooth';
     el.focus({ preventScroll: true });
-    // keep the focused card in view: rows scroll sideways, the page scrolls vertically
-    const track = el.closest('.row-track, .rank-track, .tabs, .chips, .p-drawer-list, .pop, .g-list, .chan-list');
-    if (track) el.scrollIntoView({ block: 'nearest', inline: 'center', behavior: 'smooth' });
+    // keep the focused item comfortably in view (rows sideways, pages and lists up/down)
     const r = el.getBoundingClientRect();
-    if (!track || r.top < 90 || r.bottom > innerHeight - 40) el.scrollIntoView({ block: 'center', inline: 'nearest', behavior: 'smooth' });
+    const hx = scroller(el, 'x');
+    if (hx) { const t = hx.getBoundingClientRect(); if (r.left < t.left + 60 || r.right > t.right - 60) hx.scrollBy({ left: (r.left + r.width / 2) - (t.left + t.width / 2), behavior }); }
+    const vy = scroller(el, 'y');
+    if (vy) { const t = vy.getBoundingClientRect(); if (r.top < t.top + 90 || r.bottom > t.bottom - 40) vy.scrollBy({ top: (r.top + r.height / 2) - (t.top + t.height / 2), behavior }); }
   }
 
   function move(dir) {
@@ -116,6 +126,9 @@
     const el = document.activeElement;
     const typing = el && /INPUT|TEXTAREA/.test(el.tagName);
     if (k.startsWith('Arrow')) {
+      const now = performance.now();
+      if (e.repeat && now - lastMove < 110) { e.preventDefault(); e.stopImmediatePropagation(); return; }
+      lastMove = now; fast = e.repeat;
       if (typing && (k === 'ArrowLeft' || k === 'ArrowRight') && el.value && el.selectionStart !== (k === 'ArrowLeft' ? 0 : el.value.length)) return;
       if (el && el.tagName === 'SELECT') return;
       e.preventDefault(); e.stopImmediatePropagation();
@@ -152,6 +165,41 @@
     }
     return false;
   };
+
+  // while playing: hide the app behind the video, and switch the TV to the video's frame rate
+  const FPS = [23.976, 24, 25, 29.97, 30, 48, 50, 59.94, 60];
+  let fpsToken = 0;
+  function measureFps(video) {
+    const my = ++fpsToken;
+    if (!video.requestVideoFrameCallback || !A.setVideoFps) return;
+    const d = []; let last = null;
+    const cb = (_now, md) => {
+      if (my !== fpsToken) return;
+      if (last != null) { const dt = md.mediaTime - last; if (dt > 0.008 && dt < 0.1) d.push(dt); }
+      last = md.mediaTime;
+      if (d.length < 90) return video.requestVideoFrameCallback(cb);
+      d.sort((a, b) => a - b);
+      const dt = d[Math.floor(d.length * 0.25)]; // shortest common gap = one source frame
+      const raw = 1 / dt;
+      const fps = FPS.reduce((b, f) => Math.abs(f - raw) < Math.abs(b - raw) ? f : b, 60);
+      if (Math.abs(fps - raw) / fps < 0.06) A.setVideoFps(fps);
+    };
+    video.requestVideoFrameCallback(cb);
+  }
+  document.addEventListener('DOMContentLoaded', () => {
+    const p = document.getElementById('player'), v = document.getElementById('video');
+    if (!p || !v) return;
+    const sync = () => {
+      const on = !p.classList.contains('hidden');
+      document.documentElement.classList.toggle('playing', on);
+      if (!on) { fpsToken++; A.setVideoFps && A.setVideoFps(0); }
+    };
+    new MutationObserver(sync).observe(p, { attributes: true, attributeFilter: ['class'] });
+    v.addEventListener('playing', () => { if (!p.classList.contains('hidden')) setTimeout(() => measureFps(v), 1500); });
+    v.addEventListener('loadstart', () => { fpsToken++; });
+    // muted trailers are heavy on a TV: off by default here
+    try { if (typeof S !== 'undefined' && !localStorage.getItem('nova.tvTrailers')) { S.settings.trailers = false; saveSettings(); localStorage.setItem('nova.tvTrailers', '1'); } } catch {}
+  });
 
   // text tweaks for TV
   document.addEventListener('DOMContentLoaded', () => {

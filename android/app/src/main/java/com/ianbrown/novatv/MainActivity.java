@@ -14,6 +14,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.provider.Settings;
 import android.util.DisplayMetrics;
+import android.view.Display;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.WindowManager;
@@ -214,12 +215,41 @@ public class MainActivity extends Activity {
         public void reloadUi() { ui.post(() -> web.loadUrl(activeUiUrl())); }
 
         @JavascriptInterface
+        public void setVideoFps(double fps) { ui.post(() -> matchFrameRate(fps)); }
+
+        @JavascriptInterface
         public void showKeyboard() {
             ui.post(() -> {
                 InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
                 if (imm != null) imm.showSoftInput(web, InputMethodManager.SHOW_IMPLICIT);
             });
         }
+    }
+
+    /* ---------------- frame-rate matching (smooth 24/25/50 fps video) ---------------- */
+    int uiModeId = 0;
+    void matchFrameRate(double fps) {
+        if (Build.VERSION.SDK_INT < 23) return;
+        try {
+            Display d = getWindowManager().getDefaultDisplay();
+            Display.Mode cur = d.getMode();
+            if (uiModeId == 0) uiModeId = cur.getModeId();
+            WindowManager.LayoutParams lp = getWindow().getAttributes();
+            int target = 0;
+            if (fps > 0) {
+                float best = 0;
+                for (Display.Mode m : d.getSupportedModes()) {
+                    if (m.getPhysicalWidth() != cur.getPhysicalWidth() || m.getPhysicalHeight() != cur.getPhysicalHeight()) continue;
+                    double ratio = m.getRefreshRate() / fps;
+                    long n = Math.round(ratio);
+                    if (n >= 1 && Math.abs(ratio - n) < 0.012 && m.getRefreshRate() > best) { best = m.getRefreshRate(); target = m.getModeId(); }
+                }
+                if (target == 0) return; // no exact match: leave the TV as it is
+            }
+            if (lp.preferredDisplayModeId == target) return;
+            lp.preferredDisplayModeId = target; // 0 = back to the TV's normal mode
+            getWindow().setAttributes(lp);
+        } catch (Exception ignored) {}
     }
 
     /* ---------------- UI bundles (same update feed as the Mac app) ---------------- */
